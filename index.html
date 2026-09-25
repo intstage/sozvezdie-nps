@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NPS Созвездия</title>
+<!--
+  Обёртка NPS-отчёта для Telegram Mini App и браузера.
+  Показывает веб-приложение Apps Script во весь экран (так нет плашки «создано пользователем Google Apps Script»)
+  и по запросу отчёта передаёт ему initData — подписанные Telegram данные о том, кто открыл.
+  Сама обёртка ничего не хранит и никуда данные не отправляет.
+-->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; background: #fff; }
+  iframe { display: block; border: 0; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<iframe id="app" title="NPS Созвездия" allow="clipboard-write"
+  src="https://script.google.com/macros/s/AKfycbxJE2yVdSIf8Yk8GC33eiVMwwcBccfWMw9unHDP1f5-sYvmk9pPcQEJwt6rVMpStIvt/exec"></iframe>
+<script>
+  var tg = window.Telegram && Telegram.WebApp;
+  if (tg && tg.initData) {
+    tg.ready();
+    tg.expand();                                   // во весь экран
+    try { tg.setHeaderColor('#ffffff'); tg.setBackgroundColor('#ffffff'); } catch (e) {}
+  }
+  // Отчёт (внутри iframe от googleusercontent.com) присылает «sz-hello» — отвечаем ему данными Telegram.
+  window.addEventListener('message', function (e) {
+    if (!e.data || e.data.type !== 'sz-hello') return;
+    if (!/\.googleusercontent\.com$/.test(new URL(e.origin).hostname)) return;   // только отчёту Apps Script
+    e.source.postMessage({ type: 'sz-tg', initData: tg ? tg.initData : '' }, e.origin);
+  });
+</script>
+</body>
+</html>
