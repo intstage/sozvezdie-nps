@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>NPS Созвездия</title>
+<!-- Что странице разрешено: скрипт Telegram, встроенный отчёт Google Apps Script — и больше ничего. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; frame-src https://script.google.com https://*.googleusercontent.com; connect-src 'none'; img-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <!--
   Обёртка NPS-отчёта для Telegram Mini App и браузера.
   Показывает веб-приложение Apps Script во весь экран (так нет плашки «создано пользователем Google Apps Script»)
@@ -17,7 +20,7 @@
 </style>
 </head>
 <body>
-<iframe id="app" title="NPS Созвездия" allow="clipboard-write"
+<iframe id="app" aria-label="NPS Созвездия" allow="clipboard-write"
   src="https://script.google.com/macros/s/AKfycbxJE2yVdSIf8Yk8GC33eiVMwwcBccfWMw9unHDP1f5-sYvmk9pPcQEJwt6rVMpStIvt/exec"></iframe>
 <script>
   var tg = window.Telegram && Telegram.WebApp;
