@@ -16,6 +16,8 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   html, body { margin: 0; height: 100%; background: #fff; }
+  /* --top — отступ под кнопки Telegram в полноэкранном режиме (0 в обычном окне и в браузере) */
+  body { --top: 0px; padding-top: var(--top); box-sizing: border-box; }
   iframe { display: block; border: 0; width: 100%; height: 100%; }
 </style>
 </head>
@@ -26,14 +28,36 @@
   var tg = window.Telegram && Telegram.WebApp;
   if (tg && tg.initData) {
     tg.ready();
-    tg.expand();                                   // во весь экран
+    tg.expand();                                   // на всю высоту (телефон)
+    // На компьютере Telegram открывает Mini App маленьким окном — просим полноэкранный режим.
+    // На телефоне не просим: там полноэкранный режим закрывает верх страницы кнопками Telegram.
+    var desktop = /^(tdesktop|macos|web|weba|webk)$/.test(tg.platform);
+    if (desktop && tg.isVersionAtLeast && tg.isVersionAtLeast('8.0') && tg.requestFullscreen) {
+      try { tg.requestFullscreen(); } catch (e) {}
+    }
+    // В полноэкранном режиме отодвигаем отчёт от кнопок Telegram на отступ, который сообщает сам Telegram.
+    var insets = function () {
+      var top = tg.isFullscreen ? ((tg.safeAreaInset && tg.safeAreaInset.top) || 0) + ((tg.contentSafeAreaInset && tg.contentSafeAreaInset.top) || 0) : 0;
+      document.body.style.setProperty('--top', top + 'px');
+    };
+    ['fullscreenChanged', 'safeAreaChanged', 'contentSafeAreaChanged'].forEach(function (ev) { try { tg.onEvent(ev, insets); } catch (e) {} });
+    insets();
     try { tg.setHeaderColor('#ffffff'); tg.setBackgroundColor('#ffffff'); } catch (e) {}
   }
   // Отчёт (внутри iframe от googleusercontent.com) присылает «sz-hello» — отвечаем ему данными Telegram.
+  var canFs = !!(tg && tg.initData && /^(tdesktop|macos|web|weba|webk)$/.test(tg.platform) && tg.isVersionAtLeast && tg.isVersionAtLeast('8.0'));
+  var report = null;                                 // окно отчёта и его адрес — чтобы сообщать о смене режима
+  var fsInfo = function () { return { canFullscreen: canFs, isFullscreen: !!(tg && tg.isFullscreen) }; };
+  if (canFs) tg.onEvent('fullscreenChanged', function () {
+    if (report) report.win.postMessage(Object.assign({ type: 'sz-fs' }, fsInfo()), report.origin);
+  });
   window.addEventListener('message', function (e) {
-    if (!e.data || e.data.type !== 'sz-hello') return;
-    if (!/\.googleusercontent\.com$/.test(new URL(e.origin).hostname)) return;   // только отчёту Apps Script
-    e.source.postMessage({ type: 'sz-tg', initData: tg ? tg.initData : '' }, e.origin);
+    if (!e.data || !/\.googleusercontent\.com$/.test(new URL(e.origin).hostname)) return;   // только отчёту Apps Script
+    if (e.data.type === 'sz-hello') {
+      report = { win: e.source, origin: e.origin };
+      e.source.postMessage(Object.assign({ type: 'sz-tg', initData: tg ? tg.initData : '' }, fsInfo()), e.origin);
+    }
+    if (e.data.type === 'sz-fs-toggle' && canFs) { try { tg.isFullscreen ? tg.exitFullscreen() : tg.requestFullscreen(); } catch (err) {} }
   });
 </script>
 </body>
