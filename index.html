@@ -15,13 +15,17 @@
 -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  html, body { margin: 0; height: 100%; background: #fff; }
+  html, body { margin: 0; height: 100%; background: var(--bg, #fff); }
   /* --top — отступ под кнопки Telegram в полноэкранном режиме (0 в обычном окне и в браузере) */
   body { --top: 0px; padding-top: var(--top); box-sizing: border-box; }
   iframe { display: block; border: 0; width: 100%; height: 100%; }
 </style>
 </head>
 <body>
+<script>
+  // Цвет темы отчёта с прошлого раза — чтобы при открытии не мелькала белая полоса (сам отчёт присылает «sz-theme»).
+  try { var bg0 = localStorage.getItem('sz-bg'); if (/^#[0-9a-f]{6}$/i.test(bg0)) document.documentElement.style.setProperty('--bg', bg0); } catch (e) {}
+</script>
 <iframe id="app" aria-label="NPS Созвездия" allow="clipboard-write"
   src="https://script.google.com/macros/s/AKfycbxJE2yVdSIf8Yk8GC33eiVMwwcBccfWMw9unHDP1f5-sYvmk9pPcQEJwt6rVMpStIvt/exec"></iframe>
 <script>
@@ -42,8 +46,19 @@
     };
     ['fullscreenChanged', 'safeAreaChanged', 'contentSafeAreaChanged'].forEach(function (ev) { try { tg.onEvent(ev, insets); } catch (e) {} });
     insets();
-    try { tg.setHeaderColor('#ffffff'); tg.setBackgroundColor('#ffffff'); } catch (e) {}
   }
+  // Фон обёртки и шапка Telegram — в цвет темы отчёта (светлая / тёмная), иначе сверху и снизу белые полосы.
+  var paint = function (bg) {
+    if (!/^#[0-9a-f]{6}$/i.test(bg)) return;
+    document.documentElement.style.setProperty('--bg', bg);
+    try { localStorage.setItem('sz-bg', bg); } catch (e) {}
+    if (tg && tg.initData) {
+      try { tg.setHeaderColor(bg); } catch (e) {}
+      try { tg.setBackgroundColor(bg); } catch (e) {}
+      try { if (tg.setBottomBarColor) tg.setBottomBarColor(bg); } catch (e) {}
+    }
+  };
+  paint(getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#ffffff');
   // Отчёт (внутри iframe от googleusercontent.com) присылает «sz-hello» — отвечаем ему данными Telegram.
   var canFs = !!(tg && tg.initData && /^(tdesktop|macos|web|weba|webk)$/.test(tg.platform) && tg.isVersionAtLeast && tg.isVersionAtLeast('8.0'));
   var report = null;                                 // окно отчёта и его адрес — чтобы сообщать о смене режима
@@ -57,6 +72,7 @@
       report = { win: e.source, origin: e.origin };
       e.source.postMessage(Object.assign({ type: 'sz-tg', initData: tg ? tg.initData : '' }, fsInfo()), e.origin);
     }
+    if (e.data.type === 'sz-theme') paint(String(e.data.bg || ''));
     if (e.data.type === 'sz-fs-toggle' && canFs) { try { tg.isFullscreen ? tg.exitFullscreen() : tg.requestFullscreen(); } catch (err) {} }
   });
 </script>
