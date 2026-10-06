@@ -83,6 +83,19 @@
       fsSend();
     });
   }
+  // Одно окно отчёта: кнопка под сообщением открывает новое окно приложения — новое сообщает о себе,
+  // а прежние закрываются (BroadcastChannel; запасной путь — событие storage). Только внутри Telegram.
+  if (tg && tg.initData) {
+    var born = Date.now() + Math.random();
+    var older = function (at) { if (+at > born) { try { tg.close(); } catch (e) {} } };
+    try {
+      var bc = new BroadcastChannel('sz-nps-window');
+      bc.onmessage = function (e) { if (e.data && e.data.type === 'open') older(e.data.at); };
+      bc.postMessage({ type: 'open', at: born });
+    } catch (e) {}
+    window.addEventListener('storage', function (e) { if (e.key === 'sz-nps-window') older(e.newValue); });
+    try { localStorage.setItem('sz-nps-window', String(born)); } catch (e) {}
+  }
   // Приложение уже открыто, а нажата другая ссылка t.me/<бот>?startapp=…: Telegram не перезагружает страницу,
   // а меняет tgWebAppStartParam в адресе после # (или просто показывает окно). Проверяем адрес и передаём отчёту новое место.
   var lastGo = go;
