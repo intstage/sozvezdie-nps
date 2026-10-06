@@ -83,6 +83,20 @@
       fsSend();
     });
   }
+  // Приложение уже открыто, а нажата другая ссылка t.me/<бот>?startapp=…: Telegram не перезагружает страницу,
+  // а меняет tgWebAppStartParam в адресе после # (или просто показывает окно). Проверяем адрес и передаём отчёту новое место.
+  var lastGo = go;
+  var goCheck = function () {
+    var g = '';
+    try { g = new URLSearchParams(location.hash.slice(1)).get('tgWebAppStartParam') || ''; } catch (e) {}
+    if (!/^[A-Za-z0-9_-]{1,512}$/.test(g) || g === lastGo) return;
+    lastGo = g;
+    if (report) report.win.postMessage({ type: 'sz-go', go: g }, report.origin);
+  };
+  window.addEventListener('hashchange', goCheck);
+  window.addEventListener('focus', goCheck);
+  document.addEventListener('visibilitychange', goCheck);
+  if (tg) try { tg.onEvent('activated', goCheck); } catch (e) {}
   window.addEventListener('message', function (e) {
     if (!e.data || !/\.googleusercontent\.com$/.test(new URL(e.origin).hostname)) return;   // только отчёту Apps Script
     if (e.data.type === 'sz-hello') {
