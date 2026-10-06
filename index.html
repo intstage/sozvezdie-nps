@@ -63,17 +63,22 @@
   paint(getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#ffffff');
   // Отчёт (внутри iframe от googleusercontent.com) присылает «sz-hello» — отвечаем ему данными Telegram.
   var canFs = !!(tg && tg.initData && /^(tdesktop|macos|web|weba|webk)$/.test(tg.platform) && tg.isVersionAtLeast && tg.isVersionAtLeast('8.0'));
+  // Куда открыть отчёт: ссылка из сообщения бота (t.me/<бот>?startapp=…) или кнопка (…/?go=…). Только безопасные символы.
+  var go = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || new URLSearchParams(location.search).get('go') || '';
+  if (!/^[A-Za-z0-9_-]{1,512}$/.test(go)) go = '';
   var report = null;                                 // окно отчёта и его адрес — чтобы сообщать о смене режима
-  var fsInfo = function () { return { canFullscreen: canFs, isFullscreen: !!(tg && tg.isFullscreen) }; };
+  // Режим окна помним сами: Telegram для компьютера (macOS) переключает режим, но не присылает fullscreenChanged,
+  // и tg.isFullscreen у него не меняется. Если событие всё же пришло — верим ему.
+  var fsOn = !!(tg && tg.isFullscreen);
+  var fsInfo = function () { return { canFullscreen: canFs, isFullscreen: fsOn }; };
   var fsSend = function () { if (report) report.win.postMessage(Object.assign({ type: 'sz-fs' }, fsInfo()), report.origin); };
-  var fsWant = null;                                 // что просили последним: true — во весь экран, false — в окно
   if (canFs) {
-    tg.onEvent('fullscreenChanged', fsSend);
-    // Telegram не смог: уже во весь экран — значит, просили выйти (его isFullscreen отстал) → выходим;
-    // режим не поддерживается (часть клиентов на компьютере) — прячем кнопку ⛶ в отчёте.
+    tg.onEvent('fullscreenChanged', function () { fsOn = !!tg.isFullscreen; fsSend(); });
+    // Уже во весь экран, а мы просили развернуть — значит, хотели свернуть: сворачиваем.
+    // Режим не поддерживается — прячем кнопку ⛶ в отчёте.
     tg.onEvent('fullscreenFailed', function (ev) {
       var err = ev && ev.error;
-      if (err === 'ALREADY_FULLSCREEN') { if (fsWant) try { tg.exitFullscreen(); } catch (e) {} }
+      if (err === 'ALREADY_FULLSCREEN') { fsOn = false; try { tg.exitFullscreen(); } catch (e) {} }
       else if (err === 'UNSUPPORTED') canFs = false;
       fsSend();
     });
@@ -82,15 +87,14 @@
     if (!e.data || !/\.googleusercontent\.com$/.test(new URL(e.origin).hostname)) return;   // только отчёту Apps Script
     if (e.data.type === 'sz-hello') {
       report = { win: e.source, origin: e.origin };
-      e.source.postMessage(Object.assign({ type: 'sz-tg', initData: tg ? tg.initData : '' }, fsInfo()), e.origin);
+      e.source.postMessage(Object.assign({ type: 'sz-tg', initData: tg ? tg.initData : '', go: go }, fsInfo()), e.origin);
     }
     if (e.data.type === 'sz-theme') paint(String(e.data.bg || ''));
     if (e.data.type === 'sz-fs-toggle' && canFs) {
-      // Решаем по тому, что видит отчёт (значок), а не только по tg.isFullscreen — у некоторых клиентов он не обновляется.
-      var exit = typeof e.data.isFullscreen === 'boolean' ? e.data.isFullscreen : !!tg.isFullscreen;
-      fsWant = !exit;
+      var exit = fsOn;
+      fsOn = !exit;
       try { exit ? tg.exitFullscreen() : tg.requestFullscreen(); } catch (err) {}
-      setTimeout(fsSend, 400);                       // если Telegram не прислал событие — всё равно обновить значок
+      fsSend();                                      // значок меняем сразу, не дожидаясь Telegram
     }
   });
 </script>
