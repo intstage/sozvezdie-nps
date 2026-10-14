@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>NPS Созвездия</title>
 <!-- Что странице разрешено: скрипт Telegram, встроенный отчёт Google Apps Script — и больше ничего. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; frame-src https://script.google.com https://*.googleusercontent.com https://oauth.telegram.org; connect-src 'none'; img-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; frame-src 'self' https://script.google.com https://*.googleusercontent.com https://oauth.telegram.org; connect-src https://script.google.com https://script.googleusercontent.com; img-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!--
   Обёртка NPS-отчёта для Telegram Mini App и браузера.
@@ -37,7 +37,7 @@
   try { var bg0 = localStorage.getItem('sz-bg'); if (/^#[0-9a-f]{6}$/i.test(bg0)) document.documentElement.style.setProperty('--bg', bg0); } catch (e) {}
 </script>
 <iframe id="app" aria-label="NPS Созвездия" allow="clipboard-write"
-  src="https://script.google.com/macros/s/AKfycbxJE2yVdSIf8Yk8GC33eiVMwwcBccfWMw9unHDP1f5-sYvmk9pPcQEJwt6rVMpStIvt/exec"></iframe>
+  src="report.html?v=a87ad811e2"></iframe>
 <script>
   var tg = window.Telegram && Telegram.WebApp;
   if (tg && tg.initData) {
@@ -150,6 +150,18 @@
       '&return_to=' + encodeURIComponent(location.href.split('#')[0]) + '&size=large&userpic=false&request_access=write&radius=10&lang=ru';
     loginBox.className = 'on';
   };
+  // ---- Этап 2 (#58): данные запрашиваем сразу при открытии, не дожидаясь страницы отчёта ----
+  // SZ_API подставляет сборка tools/miniapp_build.py (пусто — отчёт из Apps Script, запроса нет).
+  // Страница report.html с этого же сайта забирает ответ из window.SZ_PREFETCH.
+  var SZ_API = 'https://script.google.com/macros/s/AKfycbxJE2yVdSIf8Yk8GC33eiVMwwcBccfWMw9unHDP1f5-sYvmk9pPcQEJwt6rVMpStIvt/exec';
+  window.SZ_PREFETCH = null;
+  (function () {
+    var init = (tg && tg.initData) || savedLogin();
+    if (!SZ_API || !init || !window.fetch) return;
+    window.SZ_PREFETCH = { init: init, res: fetch(SZ_API, { method: 'POST', body: JSON.stringify({ fn: 'data', init: init }), redirect: 'follow', credentials: 'omit' })
+      .then(function (r) { if (!r.ok) throw new Error('Сервер ответил ' + r.status); return r.text(); }) };
+    window.SZ_PREFETCH.res.catch(function () {});              // ошибку покажет страница, когда заберёт ответ
+  })();
   window.addEventListener('message', function (e) {
     if (e.origin !== 'https://oauth.telegram.org' || !loginBox) return;
     var d = {};
@@ -162,7 +174,8 @@
     if (report) report.win.postMessage({ type: 'sz-login', initData: data }, report.origin);
   });
   window.addEventListener('message', function (e) {
-    if (!e.data || !/\.googleusercontent\.com$/.test(new URL(e.origin).hostname)) return;   // только отчёту Apps Script
+    // только отчёту: страница с этого же сайта (report.html, этап 2) или веб-приложение Apps Script
+    if (!e.data || !(e.origin === location.origin || /\.googleusercontent\.com$/.test(new URL(e.origin).hostname))) return;
     if (e.data.type === 'sz-hello') {
       report = { win: e.source, origin: e.origin };
       e.source.postMessage(Object.assign({ type: 'sz-tg', initData: (!tgRejected && tg && tg.initData) || savedLogin(), go: go }, fsInfo()), e.origin);

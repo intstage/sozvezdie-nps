@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://script.google.com https://script.googleusercontent.com; img-src data: blob:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<script>window.SZ_API='https://script.google.com/macros/s/AKfycbxJE2yVdSIf8Yk8GC33eiVMwwcBccfWMw9unHDP1f5-sYvmk9pPcQEJwt6rVMpStIvt/exec'</script>
+<title>NPS Созвездия</title>
+<meta name="color-scheme" content="light">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('nps-theme')==='dark'?'dark':'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Roboto:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{
+  /* Палитра «Созвездия», digital v2.5 (candidate — не утверждённая политика): sozvezdie-web-tokens-v2.5-candidate.json */
+  color-scheme:light;
+  --bg:#FFFFFF;--surface:#FFFFFF;--surface2:#F7F7F7;--ink:#111111;--ink2:#38434D;--muted:#66727D;--line:#D5E3EC;
+  --navy:#103A60;--aqua:#00B9E7;--orange:#F16522;--link:#00799B;
+  --accent:#103A60;--accent-soft:#EDF2F6;
+  --good:#17804D;--good-soft:#E4F2EA;--warn:#B05E00;--warn-soft:#FBEEDD;--bad:#C93333;--bad-soft:#FBE7E7;
+  --div-neg:#C93333;--div-mid:#F2F5F7;--div-pos:#17804D;
+  --display:"Montserrat","Roboto",Arial,sans-serif;--body:"Roboto",Arial,"Segoe UI",sans-serif;
+}/* Тёмный вариант той же палитры — ТОЛЬКО по кнопке-луне. По настройкам устройства страница не темнеет. */
+:root[data-theme="dark"]{color-scheme:dark;
+  --bg:#0A1A2B;--surface:#0F2438;--surface2:#16304A;--ink:#EAF1F6;--ink2:#B7C6D3;--muted:#8799A9;--line:#23405C;
+  --navy:#7FB3DD;--aqua:#00B9E7;--orange:#F47A44;--link:#4FC8EC;
+  --accent:#5CC4EA;--accent-soft:#16344D;
+  --good:#3CC08A;--good-soft:#123A2C;--warn:#F0A13C;--warn-soft:#3A2A14;--bad:#F06A6A;--bad-soft:#3E1D22;
+  --div-neg:#E06060;--div-mid:#1C3450;--div-pos:#3CC08A;}
+
+html,body{background:var(--bg)}   /* и под короткой страницей фон темы, а не белый */
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink2);font:14px/1.45 var(--body);font-variant-numeric:tabular-nums}
+/* Страница никогда не шире экрана: во встраивании (Google Sites, Telegram) её нельзя сдвинуть вбок, широкие таблицы листаются внутри своих блоков */
+html,body{max-width:100%}
+html{overflow-x:hidden}body{overflow-x:hidden;overflow-x:clip}   /* clip, а не hidden: hidden у body ломает прилипание вкладок и заголовков таблиц */
+.wrap{max-width:1240px;margin:0 auto;padding-inline:20px;padding-block:20px 130px}   /* снизу — место под кнопки «Назад» и «Наверх» */
+body{margin:0}
+@media (max-width:560px){.wrap{padding-inline:16px;padding-top:16px}}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;margin-bottom:18px}
+.brand h1{font:600 22px/1.2 var(--display);color:var(--navy);margin:0;text-wrap:balance;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand h1 .h1-sub{font:500 14px/1.2 var(--body);color:var(--muted);padding-left:12px;border-left:3px solid var(--orange)}
+.brand p{margin:4px 0 0;color:var(--ink2)}
+.legend-zones{display:flex;flex-wrap:wrap;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px 2px 8px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.z-good{color:var(--good);background:var(--good-soft)}.z-warn{color:var(--warn);background:var(--warn-soft)}.z-bad{color:var(--bad);background:var(--bad-soft)}.z-low{color:var(--muted);background:var(--surface2)}
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:grid;grid-auto-flow:column;grid-auto-columns:max-content;justify-content:start;gap:4px;padding-block:8px;border-bottom:1px solid var(--line);margin-bottom:16px}
+nav.tabs button{font:600 13.5px var(--display);min-height:40px;color:var(--ink2);background:none;border:1px solid transparent;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;text-align:center}
+nav.tabs button[aria-selected="true"]{background:var(--navy);color:#FFFFFF}
+nav.tabs button:focus:not(:focus-visible){outline:none}
+@media (max-width:760px){nav.tabs{position:static;grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:repeat(3,1fr);justify-content:stretch}nav.tabs button{border-color:var(--line)}}
+@media (max-width:480px){nav.tabs{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:300px){nav.tabs{grid-template-columns:1fr}}
+button:focus-visible,tr[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* Поля ввода и списки: при фокусе — цвет рамки и мягкая подсветка, без второго контура поверх рамки */
+select:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.filters{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:end;margin-bottom:16px}
+.filters>label,.fgroup{display:flex;flex-direction:column;gap:5px;min-width:0}
+.filters>label,.flbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.filters .grow{flex:1 1 280px}.filters .grow input{width:100%}
+/* Все поля фильтров — списки, поиск, переключатели, флажки — одной высоты и с одинаковой рамкой */
+:root{--ctl-h:42px}
+select,input[type=search]{font:15px var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;height:var(--ctl-h);padding:0 12px;min-width:0;max-width:100%}
+.filters select{min-width:220px}
+.seg,.checks{display:inline-flex;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;min-height:var(--ctl-h)}
+.seg button{font:500 14px var(--body);border:0;background:none;color:var(--ink2);padding:0 14px;border-radius:7px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.checks{flex-wrap:wrap;gap:2px}
+.checks label{display:inline-flex;align-items:center;gap:7px;padding:0 10px;border-radius:7px;font:500 14px var(--body);color:var(--ink2);cursor:pointer;white-space:nowrap}
+.checks input{width:16px;height:16px;margin:0;accent-color:var(--accent);cursor:pointer}
+/* Телефон: переключатели и поиск во всю ширину, кнопки сегмента — сеткой 2×2 */
+@media (max-width:560px){
+  .filters>*{flex:1 1 100%;min-width:0}
+  .seg{display:grid;grid-template-columns:1fr 1fr;width:100%;box-sizing:border-box}
+  .seg button{padding:9px 6px}
+  .checks{width:100%}.checks label{padding:9px 10px}
+  .filters input[type=search],.filters select{width:100%;box-sizing:border-box}
+}
+.grid{display:grid;gap:16px}
+.g-kpi{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.g-2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+@media (max-width:420px){.g-2{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.panel h2{font:600 15px/1.3 var(--display);color:var(--navy);margin:0 0 2px}
+.panel .sub{color:var(--muted);font-size:12.5px;margin:0 0 12px}
+.kpi .lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kpi .val{font:600 34px/1.1 var(--display);color:var(--navy);margin:8px 0 6px;letter-spacing:-.02em}
+.kpi .val small{font:500 14px var(--body);color:var(--muted);margin-left:4px;letter-spacing:0}
+.kpi .foot{display:flex;flex-wrap:wrap;gap:6px;align-items:center;color:var(--ink2);font-size:12.5px}
+.kpi .foot+.foot{margin-top:4px}.kpi .val small .delta{font-size:14px;white-space:nowrap}
+.delta{font-weight:600}.delta.up{color:var(--good)}.delta.dn{color:var(--bad)}.delta.eq{color:var(--muted)}
+.pnd{display:flex;gap:2px;height:10px;border-radius:4px;overflow:hidden;background:var(--surface2)}
+.pub-themes{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.pub-themes li{display:grid;grid-template-columns:minmax(120px,1.2fr) 1fr 1fr;gap:10px;align-items:center;font-size:13px}
+.pt-bar{position:relative;height:18px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.pt-bar i{position:absolute;top:0;bottom:0;left:0;inset:0 auto 0 0;border-radius:4px}.pt-bar.neg i{background:var(--bad);opacity:.8}.pt-bar.pos i{background:var(--good);opacity:.8}
+.pt-bar b{position:relative;font-size:11.5px;padding-left:6px;line-height:18px;color:var(--ink)}
+@media (max-width:560px){.pub-themes li{grid-template-columns:1fr 1fr;row-gap:4px}.pub-themes li span{grid-column:1/-1}}
+.pnd i{display:block;height:100%}
+.pnd .p{background:var(--good)}.pnd .n{background:var(--muted);opacity:.45}.pnd .d{background:var(--bad)}
+.pnd-leg{display:flex;gap:12px;font-size:12px;color:var(--ink2);margin-top:8px;flex-wrap:wrap}
+.pnd-leg span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:0}
+.pnd-leg .p::before{background:var(--good)}.pnd-leg .n::before{background:var(--muted);opacity:.45}.pnd-leg .d::before{background:var(--bad)}
+.zone-list{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.zone-list li{display:grid;grid-template-columns:minmax(110px,1.3fr) 2fr 40px 52px;gap:10px;align-items:center;font-size:13px}
+/* «Сильнее / слабее, чем флот»: полоса разницы от нулевой отметки посередине */
+.zone-list li.dz{grid-template-columns:minmax(110px,1.3fr) 1.6fr 30px 64px 40px}
+.dbar{position:relative;height:10px;background:var(--surface2);border-radius:5px}
+.dbar::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--muted);opacity:.6}
+.dbar i{position:absolute;top:0;bottom:0;border-radius:5px}
+.dbar i.p{left:50%;background:var(--good)}.dbar i.n{right:50%;background:var(--bad)}
+.zone-list .vs{font-size:11.5px;white-space:nowrap;text-align:right}
+@media (max-width:560px){.zone-list li.dz{grid-template-columns:1fr 1fr 28px 40px}.zone-list li.dz .vs{display:none}}
+/* «Почему теплоходы ниже флота» */
+.why-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.why-card{border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.why-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.why-head .ship-btn{font:600 14px var(--display);color:var(--accent)}
+.why-nps{font-size:13px}.why-nps b{font:600 22px/1 var(--display)}
+.why-line{margin:6px 0 0;font-size:13px;line-height:1.6}
+.why-lbl{display:block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.chip.good{background:var(--good-soft);color:var(--good)}
+.trip-chip{border:1px solid var(--line);cursor:pointer;font:inherit;font-size:11.5px;background:var(--surface2);color:var(--accent)}
+@media (hover:hover){.trip-chip:hover{border-color:var(--accent)}}
+.bar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;border-radius:0 4px 4px 0}
+.num{text-align:right;font-weight:600}
+.muted{color:var(--muted)}
+.tbl-wrap{overflow-x:auto;margin-inline:-4px}
+thead th{position:sticky;z-index:3;background:var(--surface);box-shadow:inset 0 -1px 0 var(--line)}
+@media (min-width:761px){.tbl-wrap:not(.tw-x){overflow:visible}thead th{top:var(--nav-h,57px)}.tw-x{max-height:80vh;overflow:auto;overscroll-behavior:contain}.tw-x thead th{top:0}}
+@media (max-width:760px){.tbl-wrap:not(:has(table.stack)){max-height:75vh;overflow:auto;overscroll-behavior:contain}thead th{top:0}}
+td.nw{white-space:nowrap}td.st-text{max-width:280px}
+/* Таблица-карточки на телефоне */
+@media (max-width:640px){
+  table.stack thead{display:none}
+  table.stack,table.stack tbody{display:block;width:100%}
+  table.stack tr{display:block;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 4px 10px;background:var(--surface)}
+  table.stack td{display:grid;grid-template-columns:92px 1fr;gap:10px;align-items:start;border:0;padding:4px 0;text-align:left;white-space:normal;max-width:none}
+  table.stack td::before{content:attr(data-l);color:var(--muted);font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding-top:2px}
+  table.stack td.st-title{display:block;font-weight:600;font-size:14px;padding-bottom:6px}
+  table.stack td.st-title::before{content:none}
+  table.stack td.st-empty{display:none}
+  table.stack td br{display:none}table.stack td .muted{margin-left:6px}
+}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface)}
+th.r,td.r{text-align:right}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.click{cursor:pointer}
+/* «Что проседает по теплоходам» */
+.heat{border-collapse:separate;border-spacing:3px;font-size:13px;min-width:720px}
+.heat th{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:center;white-space:normal;line-height:1.2;padding:6px 4px;min-width:72px;border:0;vertical-align:bottom}
+.heat thead th{box-shadow:none;vertical-align:middle;padding:0 0 6px}
+.heat thead th.rowh{padding:0 10px 6px 0}   /* шапка: подписи и кнопки теплоходов — по одной средней линии */
+/* название теплохода — кнопка: открывает отчёт теплохода */
+.heat th a.ship-btn{display:flex;align-items:center;justify-content:center;gap:4px;min-height:44px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--accent);text-decoration:none;font:600 11.5px/1.2 var(--body);letter-spacing:0;text-transform:none;text-align:center}
+.heat th a.ship-btn::after{content:"›";font-size:15px;line-height:1;flex:none}
+.heat th a.ship-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (hover:hover){.heat th a.ship-btn:hover{background:var(--accent-soft);border-color:var(--accent)}}
+.heat .rowh{position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;min-width:150px;padding:6px 10px 6px 0;font:500 13px var(--body);color:var(--ink);text-transform:none;letter-spacing:0}
+.heat thead .rowh{z-index:4;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.heat tr.grp th{text-align:left;padding:14px 0 2px;font-size:10.5px;letter-spacing:.06em;color:var(--muted);background:var(--surface);position:static}
+.heat tr.grp th span{position:sticky;left:0;display:inline-block}   /* подпись группы остаётся на месте при прокрутке вбок */
+.heat td{padding:0;border:0;border-radius:6px;text-align:center;font-weight:600}
+.heat td button{display:block;width:100%;min-height:32px;padding:4px;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;border-radius:6px}
+.heat td button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.heat td.fleet,.heat th.fleet{color:var(--ink);font-weight:700;box-shadow:inset 0 0 0 1px var(--line);border-radius:6px}
+.heat th.fleet{color:var(--ink)}.heat thead th.fleet{box-shadow:none}   /* рамка — только у клеток «Флот», не у заголовка */
+/* 5 ступеней разницы: цвет смешивается с фоном карточки — одинаково читается в светлой и тёмной теме */
+.hc.dn2{background:var(--bad-soft);background:color-mix(in srgb,var(--bad) 36%,var(--surface));color:var(--bad)}
+.hc.dn1{background:var(--bad-soft);background:color-mix(in srgb,var(--bad) 18%,var(--surface));color:var(--bad)}
+.hc.eq{background:var(--surface2);color:var(--ink2);font-weight:500}
+.hc.up1{background:var(--good-soft);background:color-mix(in srgb,var(--good) 18%,var(--surface));color:var(--good)}
+.hc.up2{background:var(--good-soft);background:color-mix(in srgb,var(--good) 34%,var(--surface));color:var(--good)}
+.hc.good{background:var(--good-soft);color:var(--good)}.hc.warn{background:var(--warn-soft);color:var(--warn)}.hc.bad{background:var(--bad-soft);color:var(--bad)}
+.hc.low{background:transparent;color:var(--muted);font-weight:400;box-shadow:inset 0 0 0 1px var(--line)}
+.heat-leg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 16px;margin:0 0 12px}   /* ровная сетка, пункты друг под другом */
+.hl{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)}
+.hl::before{content:"";flex:none;width:14px;height:14px;border-radius:4px;background:var(--surface2)}
+.hl.dn2::before{background:var(--bad-soft);background:color-mix(in srgb,var(--bad) 36%,var(--surface))}.hl.dn1::before{background:var(--bad-soft);background:color-mix(in srgb,var(--bad) 18%,var(--surface))}
+.hl.up1::before{background:var(--good-soft);background:color-mix(in srgb,var(--good) 18%,var(--surface))}.hl.up2::before{background:var(--good-soft);background:color-mix(in srgb,var(--good) 34%,var(--surface))}
+.hl.good::before{background:var(--good-soft);box-shadow:inset 0 0 0 1px var(--good)}.hl.warn::before{background:var(--warn-soft);box-shadow:inset 0 0 0 1px var(--warn)}.hl.bad::before{background:var(--bad-soft);box-shadow:inset 0 0 0 1px var(--bad)}
+.hl.low::before{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+@media (max-width:560px){.heat-leg{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}}
+.heat-panel .ph-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:10px 16px;margin-bottom:10px}.heat-panel .ph-head>div:first-child{flex:1 1 320px}
+/* Конкуренты: карточки тем по компаниям */
+.comp-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.comp-card{border:1px solid var(--line);border-radius:10px;padding:12px 14px}.comp-card[data-us]{background:var(--accent-soft);border-color:transparent}
+.comp-card h3{font:600 14px var(--display);color:var(--navy);margin:0}
+.comp-th{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:4px;font-size:12.5px}
+.comp-th li{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:baseline}.comp-th b.up{color:var(--good)}.comp-th b.dn{color:var(--bad)}
+/* Подсказка под переключателем карты зон: активный режим — ярче, второй — приглушён */
+.heat-help{margin:0 0 10px;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.heat-help summary{cursor:pointer;color:var(--accent);font-weight:600;width:max-content}
+.heat-help ul{margin:6px 0 0;padding-left:1.2em;max-width:110ch}.heat-help li{margin:3px 0}
+.alerts{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.alerts li{display:grid;grid-template-columns:4px 1fr;gap:12px;padding:10px 12px;background:var(--surface2);border-radius:8px}
+.alerts li::before{content:"";border-radius:2px}
+.alerts li.bad::before{background:var(--bad)}.alerts li.warn::before{background:var(--warn)}.alerts li.good::before{background:var(--good)}
+.alerts b{font-weight:600}.alerts .meta{color:var(--muted);font-size:12px}
+svg text{fill:var(--ink2);font-family:var(--body);font-size:11px}
+svg .grid-l{stroke:var(--line);stroke-width:1}
+.tip{position:fixed;pointer-events:none;z-index:20;background:var(--ink);color:var(--bg);padding:8px 10px;border-radius:8px;font-size:12.5px;line-height:1.4;max-width:280px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.tip b{font-weight:600}
+.trip-head{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline}
+.trip-head h2{font:600 17px/1.3 var(--display);color:var(--navy);margin:0}
+.quotes{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.quote{background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:13px}
+.quote .who{color:var(--muted);font-size:11.5px;margin-top:6px}
+.metric-row{display:grid;grid-template-columns:minmax(120px,1.2fr) 2.2fr 44px 64px;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.metric-row:last-child{border-bottom:0}
+.grp-h{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:14px 0 2px}
+.note{font-size:12.5px;line-height:1.5;color:var(--muted);margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}   /* подвал во всю ширину страницы */
+.note h3{font:600 12px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.note dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px 28px;margin:0}
+.note dt{font-weight:600;color:var(--ink2);margin:0 0 2px}.note dd{margin:0}
+/* подвал, как в отчёте «Заявки Созвездия»: «Качество данных» (карточка, свёрнуто) → «Объём данных» (серая плашка) → «Как считается» */
+.note details.dq{margin:0 0 20px;font-size:14px;line-height:1.45;color:var(--ink2)}
+.note details.dq summary{color:var(--ink)}
+.note .ref-info{margin:0 0 20px;padding:12px 16px;border-radius:10px;background:var(--surface2);color:var(--ink2);font-size:13px;line-height:1.5}
+.note .ref-info b{font-weight:600;color:var(--ink)}
+/* Заголовок блока с кнопкой справа: кнопка не переносится и не съезжает при длинном названии */
+.ph-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 16px;align-items:start;margin-bottom:2px}
+.ph-head h2{margin:0}.ph-head .btn{white-space:nowrap}
+.ph-head.route h2{font:600 17px/1.3 var(--display)}
+.wrap::before{content:"";display:block;height:4px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,var(--navy) 0 60%,var(--aqua) 60% 85%,var(--orange) 85%);margin:-20px 0 18px}
+@media (max-width:560px){.wrap::before{margin-top:-16px}}
+a{color:var(--link)}
+.chip{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:5px;background:var(--surface2);color:var(--ink2);margin:1px 2px 1px 0}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.score{display:inline-grid;place-items:center;width:26px;height:22px;border-radius:5px;font-weight:700;font-size:12.5px}
+.sample{display:inline-block;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:4px;padding:2px 6px;margin-left:6px;vertical-align:2px}
+.top-side{display:contents}
+.brand{display:contents}
+header.top{display:grid;grid-template-columns:1fr auto;grid-template-areas:"title refresh" "period refresh" "legend legend";align-items:start;row-gap:6px}
+header.top h1{grid-area:title}
+header.top #period{grid-area:period;margin:0 0 6px}
+header.top .refresh{grid-area:refresh;justify-content:flex-end;padding-top:4px}
+header.top .legend-zones{grid-area:legend}
+@media (max-width:760px){header.top{grid-template-columns:1fr;grid-template-areas:"title" "refresh" "period" "legend"}header.top .refresh{justify-content:flex-start;padding-top:0;margin-bottom:6px;gap:4px}}
+/* До 760 px (телефон и узкое окно Telegram): «Обновить данные», ⛶ и тема — в строке названия вместо подписи «анкеты пассажиров»;
+   кнопка обновления — всегда кружок со стрелкой, как ⛶ и тема (класс fit-icon ставит fitHeader).
+   Сводка переносится только между частями «·»; зоны — ровной сеткой 2×2. Как в отчёте «Заявки Созвездия». */
+.m-only{display:none}
+.nw{white-space:nowrap}
+@media (max-width:760px){
+  .brand h1{flex-wrap:nowrap;justify-content:space-between;gap:12px;min-width:0}.brand h1 .h1-sub{display:none}
+  .brand h1 .h1-title{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .js-refresh-m .t-short,.js-refresh-m .t-icon{display:none}
+  .m-actions.fit-short .js-refresh-m .t-full,.m-actions.fit-icon .js-refresh-m .t-full,.m-actions.fit-icon .js-refresh-m .t-short{display:none}
+  .m-actions.fit-short .js-refresh-m .t-short{display:inline}
+  .m-actions.fit-icon .js-refresh-m .t-icon{display:block;width:1.4em;height:1.4em}
+  .m-actions.fit-icon .js-refresh-m{width:2.7em;padding:0;justify-content:center;border-radius:50%}
+  .m-actions.fit-icon .btn.icon-btn.js-theme,.m-actions.fit-icon .btn.icon-btn.js-fs{border-radius:50%}
+  .js-refresh-m.busy .t-icon{animation:sp 1s linear infinite}
+  /* кнопки одной высоты, полупрозрачные; размеры в em — растут вместе с масштабом шрифта */
+  .brand h1 .m-actions{display:inline-flex;align-items:center;gap:.45em;flex:none;font:500 clamp(12px,3.6vw,15px)/1 var(--body)}
+  .m-actions .btn{font:inherit;height:2.7em;padding:0 1em;background:var(--surface);background:color-mix(in srgb,var(--surface) 55%,transparent);border:1px solid var(--line);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);border-radius:8px;display:inline-flex;align-items:center;white-space:nowrap}
+  .m-actions .btn.icon-btn{width:2.7em;height:2.7em;padding:0;justify-content:center;background:var(--surface);background:color-mix(in srgb,var(--surface) 55%,transparent);border:1px solid var(--line);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);border-radius:8px}
+  .m-actions .btn.icon-btn svg{width:1.4em;height:1.4em}
+  header.top .refresh #btn-fs,header.top .refresh #btn-theme,header.top .refresh #btn-refresh{display:none}
+  header.top .refresh #stamp{flex:1 1 auto}
+}
+@media (max-width:560px){
+  header.top #period{line-height:1.5;text-wrap:balance}
+  .legend-zones{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .legend-zones .pill{justify-content:center;padding:4px 8px}
+}
+.refresh{display:flex;align-items:center;gap:10px;font-size:12.5px;flex-wrap:wrap}
+.btn.icon-btn{display:inline-grid;place-items:center;width:34px;height:34px;padding:0;border:0;background:transparent;border-radius:50%;line-height:0}
+.btn.icon-btn svg{display:block}
+.zoom{display:inline-flex;align-items:center;gap:0}.zoom .icon-btn{font:600 18px/1 var(--body);color:var(--accent)}
+.btn.zoom-val{border:0;background:transparent;padding:6px 4px;min-width:46px;font-variant-numeric:tabular-nums}
+@media (max-width:560px){.zoom{display:none}}   /* на телефоне масштаб — жестом двумя пальцами */
+.btn{font:500 13px var(--body);color:var(--accent);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+.btn:disabled{opacity:.55;cursor:progress}
+.loading{padding:60px 0;text-align:center;color:var(--muted)}
+.loading .spin{width:26px;height:26px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);margin:0 auto 12px}
+@media (prefers-reduced-motion:no-preference){.loading .spin{animation:sp 0.9s linear infinite}}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* переход из уведомления бота: подсветка блока, к которому привела ссылка */
+.flash{animation:flash 2.4s ease-out}tr.flash>td{animation:flashrow 2.4s ease-out}@keyframes flashrow{0%,45%{background:var(--accent-soft)}100%{background:transparent}}@keyframes flash{0%,35%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 3px transparent}}
+.err{background:var(--bad-soft);color:var(--bad);border-radius:10px;padding:14px 16px}
+details.dq summary{cursor:pointer;font-weight:600;font-size:15px;list-style:none;display:flex;align-items:center;gap:10px}
+details.dq summary::-webkit-details-marker{display:none}
+details.dq summary::before{content:"";width:7px;height:7px;border-right:2px solid var(--ink2);border-bottom:2px solid var(--ink2);transform:rotate(-45deg);transition:transform .15s ease;flex:none;margin-left:2px}
+details.dq[open] summary::before{transform:rotate(45deg) translate(-2px,-2px)}
+details.dq summary:focus:not(:focus-visible){outline:none}
+details.dq ul{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:6px}
+details.dq li{display:grid;grid-template-columns:4px 1fr;gap:10px;font-size:13px;padding:6px 10px;background:var(--surface2);border-radius:6px}
+details.dq li::before{content:"";border-radius:2px;background:var(--muted)}
+details.dq li.warn::before{background:var(--warn)}details.dq li.bad::before{background:var(--bad)}
+@media (max-width:560px){.zone-list li,.metric-row{grid-template-columns:1fr 1.2fr 36px 48px;gap:8px}.kpi .val{font-size:28px}}
+/* скрытая кнопка скрыта всегда — даже если её стиль задаёт display (пустая ⛶ на телефоне) */
+[hidden]{display:none!important}
+/* Навигация: «Назад» — к предыдущей вкладке, «Наверх» — в начало страницы */
+.fab{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:15;display:flex;flex-direction:column;gap:10px}
+.fab button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--accent);box-shadow:0 4px 14px rgba(16,58,96,.18);display:grid;place-items:center;cursor:pointer;padding:0}
+.fab svg{width:20px;height:20px}
+@media print{.fab{display:none}}
+/* подсветка при наведении — только у устройств с мышью */
+@media (hover:hover){nav.tabs button:hover,.checks label:hover,tr.click:hover td{background:var(--surface2)}.btn:hover,.btn.icon-btn:hover,.fab button:hover{background:var(--accent-soft)}}
+/* Телефон: фильтры компактнее — не занимают весь экран */
+@media (max-width:560px){
+  :root{--ctl-h:36px}
+  .filters{gap:8px 10px;margin-bottom:12px}
+  .filters>label,.flbl{font-size:10px}
+  select,input[type=search]{font-size:14px;border-radius:8px;padding:0 8px}
+  .seg,.checks{border-radius:8px;padding:2px}.seg button{font-size:12.5px;padding:6px 4px;border-radius:6px}
+  .checks label{font-size:13px;padding:6px 8px}
+}
+@media (prefers-reduced-motion:no-preference){.pnd i,.bar i{transition:width .3s ease}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1><span class="h1-title">NPS Созвездия</span> <span class="h1-sub">анкеты пассажиров</span><span class="m-actions m-only"><button type="button" class="btn js-refresh js-refresh-m" title="Обновить данные" aria-label="Обновить данные"><span class="t-full">Обновить данные</span><span class="t-short">Обновить</span><svg class="t-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="btn icon-btn js-fs" hidden></button><button type="button" class="btn icon-btn js-theme"></button></span></h1>
+      <p id="period">Загружаю анкеты из таблицы…</p>
+    </div>
+    <div class="top-side">
+    <div class="refresh"><span id="stamp" class="muted"></span><span class="zoom" role="group" aria-label="Масштаб"><button type="button" class="btn icon-btn" data-zoom="-1" title="Мельче (Ctrl/Cmd −)" aria-label="Мельче">−</button><button type="button" class="btn zoom-val" data-zoom="0" title="Обычный размер (Ctrl/Cmd 0)">100%</button><button type="button" class="btn icon-btn" data-zoom="1" title="Крупнее (Ctrl/Cmd +)" aria-label="Крупнее">+</button></span><button type="button" id="btn-fs" class="btn icon-btn" hidden></button><button type="button" id="btn-theme" class="btn icon-btn"></button><button type="button" id="btn-refresh" class="btn js-refresh">Обновить данные</button></div>
+    <div class="legend-zones" aria-label="Зоны NPS">
+      <span class="pill z-good">85+ сильная зона</span>
+      <span class="pill z-warn">70–84 внимание</span>
+      <span class="pill z-bad">&lt;70 проседает</span>
+      <span class="pill z-low">&lt;10 ответов</span>
+    </div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+  <div class="filters" id="filters"></div>
+  <main id="view"></main>
+<script>
+/* Сторож совместимости: если основной скрипт не запустился (старый встроенный браузер Telegram на Android, Windows, Linux),
+   вместо вечной «загрузки» показываем, что обновить. Без новых возможностей языка — должен работать везде. */
+window.__szErr='';
+window.addEventListener('error',function(e){if(!window.__szErr)window.__szErr=String(e&&e.message||'')});
+window.addEventListener('load',function(){setTimeout(function(){
+  if(window.__szBoot)return;var v=document.getElementById('view');if(!v)return;var ua=navigator.userAgent;
+  var how=/Android/i.test(ua)?'обновите Telegram и «Android System WebView» (или Chrome) в Google Play / AppGallery':
+    /Windows/i.test(ua)?'обновите Telegram Desktop; если не помогло — установите Microsoft Edge WebView2 Runtime (бесплатно, с сайта Microsoft)':
+    /Linux|X11/i.test(ua)?'обновите Telegram Desktop и пакет webkit2gtk (libwebkit2gtk-4.1) через менеджер пакетов':
+    /iPhone|iPad|Macintosh/i.test(ua)?'обновите iOS / macOS и Telegram':'обновите Telegram';
+  v.innerHTML='<div class="err"><b>Отчёт не запустился на этом устройстве.</b> Похоже, встроенный браузер устарел: '+how+'.'+
+    (window.__szErr?'<br><small>Ошибка: '+window.__szErr.replace(/[<>&]/g,'')+'</small>':'')+'</div>';
+},1500)});
+</script>
+  <footer class="note" id="footnote"></footer>
+</div>
+<div class="fab"><button type="button" id="btn-back" title="Назад — к предыдущей вкладке" aria-label="Назад" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" id="btn-top" title="Наверх" aria-label="Наверх" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const SHORT=['Рекомендация','Впечатление от круиза','Впечатление от т/х','Маршрут','Чистота','Вежливость экипажа','Удобство каюты','Уборка каюты','Обслуживание в ресторане','Шведский стол','Завтрак в каюту','Обеды','Ужины','Официант','Бар: ассортимент','Бар: цены','Бар: обслуживание','Директор круиза','Стойка информации','Путевая информация','Развлекательная программа'];
+const K=SHORT;
+const GROUPS=[['Общее впечатление',0,3],['Каюта и экипаж',4,7],['Ресторан',8,13],['Бар',14,16],['Программа и сервис',17,20]];
+const MIN_N=10;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>String(s||'').toLowerCase().replace(/ё/g,'е').trim();   // одно правило для поиска и имён официантов
+const fmtIso=s=>s?`${s.slice(8,10)}.${s.slice(5,7)}.${s.slice(0,4)}`:'—';
+const fmtD=s=>s.slice(0,5);
+const byDate=(a,b)=>(a.d0?+a.d0:Infinity)-(b.d0?+b.d0:Infinity);
+const byNpsDesc=(x,y)=>(y==null)-(x==null)||(y??0)-(x??0);   // пустые NPS («нет ответов») — в конце списка
+const fbCount=list=>list.reduce((a,t)=>a+t.fb,0);
+const nOf=m=>m?m[0]+m[1]+m[2]:0;
+function shortRoute(r){const p=r.split(' – ');return p.length<=4?r:`${p[0]} – ${p[1]} – … – ${p[p.length-1]} (${p.length-1} ст.)`}
+
+let trips=[],ships=[],FLEET=[],DATA={rows:[],warnings:[]};
+
+/* Превращает ответ сервера в рейсы с посчитанными P/N/D по каждому пункту. */
+function build(P){
+  DATA=P;
+  trips=P.trips.map((t,i)=>({id:i,ship:t.ship,sheet:t.sheet,s0:t.s||'',e0:t.e||'',dep:fmtIso(t.s),arr:fmtIso(t.e),
+    d0:t.s?new Date(t.s+'T00:00:00'):null,d1:t.e?new Date(t.e+'T00:00:00'):null,
+    route:t.route||(t.s?`${t.ship} · маршрут не найден в справочнике`:`${t.ship} · дата рейса не указана`),
+    routeKnown:!!t.route,cruise:t.cruise||'',
+    routeShort:t.route?shortRoute(t.route):(t.s?'маршрут не найден':'без даты'),
+    m:SHORT.map(()=>[0,0,0]),w:[],fb:0,n:0}));
+  const W=trips.map(()=>({}));
+  P.rows.forEach(r=>{const t=trips[r[0]];t.n++;
+    r[2].forEach((v,k)=>{if(v!=null)t.m[k][v>=9?0:v>=7?1:2]++});
+    if(r[9])t.fb++;
+    const wn=(r[3]||'').trim(),ws=r[2][13];
+    if(wn&&ws!=null){const key=norm(wn).replace(/\s+/g,' ');const o=W[r[0]][key]||(W[r[0]][key]={n:wn,s:0,c:0});o.s+=ws;o.c++}});
+  trips.forEach((t,i)=>{t.w=Object.values(W[i]).map(o=>[o.n,o.s/o.c,o.c])});
+  ships=P.ships.map(s=>s.name);
+  FLEET=agg(trips);
+  // строки для «Клиентов»: [теплоход, дата, бывал, оценки, официант, текст, покупатель, тип, заявка, каюта, ID_FB, рейс]
+  DATA.rows=P.rows.map(r=>{const t=trips[r[0]];return[t.ship,t.dep,r[1]===1?'Да':r[1]===0?'Нет':'',r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[0]]});
+  if(!ships.includes(S.ship))S.ship=ships[0];
+  if(S.trip!=null&&!trips[S.trip])S.trip=null;
+  const dated=trips.filter(t=>t.d0);
+  const first=dated.reduce((a,t)=>t.d0<a.d0?t:a,dated[0]),last=dated.reduce((a,t)=>t.d1>a.d1?t:a,dated[0]);
+  // Сводка данных — в подвале, между «Качеством данных» и «Как считается»; перенос строки — только между частями
+  $('#data-slot').innerHTML='<p class="ref-info"><b>Объём данных.</b> '+[first?`Рейсы ${fmtD(first.dep)}–${last.arr}`:'',`${ships.length} теплоходов`,`${trips.length} рейсов`,`${P.rows.length} анкет`,`на ${esc(P.generated)}`].filter(Boolean).map(x=>`<span class="nw">${x}</span>`).join(' · ')+'</p>';
+  $('#period').hidden=true;
+  $('#stamp').textContent='Данные на '+P.generated;
+}
+
+function agg(list){return K.map((_,k)=>{let P=0,N=0,D=0;list.forEach(t=>{const m=t.m[k];if(m){P+=m[0];N+=m[1];D+=m[2]}});const n=P+N+D;return{P,N,D,n,nps:n?Math.round((P-D)/n*100):null}})}
+function zone(v,n){if(v==null||n<MIN_N)return'low';return v>=85?'good':v>=70?'warn':'bad'}
+const ZL={good:'сильная',warn:'внимание',bad:'проседает',low:'мало данных'};
+const ZC={good:'var(--good)',warn:'var(--warn)',bad:'var(--bad)',low:'var(--muted)'};
+function pill(v,n){const z=zone(v,n);return`<span class="pill z-${z}">${ZL[z]}</span>`}
+function delta(a,b){if(a==null||b==null)return'<span class="delta eq">—</span>';const d=a-b;const c=d>=3?'up':d<=-3?'dn':'eq';return`<span class="delta ${c}">${d>0?'+':d<0?'−':'±'}${Math.abs(d)}</span>`}
+function pnd(a,h=10){if(!a.n)return'<div class="pnd"></div>';const w=x=>(x/a.n*100).toFixed(1)+'%';return`<div class="pnd" style="height:${h}px"><i class="p" style="width:${w(a.P)}"></i><i class="n" style="width:${w(a.N)}"></i><i class="d" style="width:${w(a.D)}"></i></div>`}
+function sc(v){if(v==null)return'<span class="muted">—</span>';const z=v>=9?'good':v>=7?'warn':'bad';return`<span class="score z-${z}">${v}</span>`}
+const tripLabel=t=>`${fmtD(t.dep)}–${fmtD(t.arr)}${t.cruise?' · '+t.cruise:''} · ${t.routeShort}`;
+
+/* tooltip */
+const tip=$('#tip');
+function showTip(e,html){tip.innerHTML=html;tip.hidden=false;const r=tip.getBoundingClientRect();let x=e.clientX+14,y=e.clientY+14;if(x+r.width>innerWidth-8)x=e.clientX-r.width-14;if(y+r.height>innerHeight-8)y=e.clientY-r.height-14;const z=parseFloat(document.documentElement.style.zoom)||1;tip.style.left=x/z+'px';tip.style.top=y/z+'px'}   // при масштабе координаты мыши — без увеличения
+function hideTip(){tip.hidden=true}
+document.addEventListener('mouseover',e=>{const el=e.target.closest('[data-tip]');if(el)showTip(e,el.dataset.tip)});
+document.addEventListener('mousemove',e=>{const el=e.target.closest('[data-tip]');el?showTip(e,el.dataset.tip):hideTip()});
+
+/* Переход из уведомления бота. Обёртка передаёт go — base64url от JSON:
+   {t:вкладка, sh:теплоход, s/e:даты отправления и прибытия ISO, cf/q:фильтр «Клиентов», id:ID отзыва площадки, sec:id блока}. */
+let GO=null,GO_AFTER=null;
+function goDecode(v){try{v=String(v||'').replace(/-/g,'+').replace(/_/g,'/');const b=atob(v+'==='.slice((v.length+3)%4));
+  return JSON.parse(new TextDecoder().decode(Uint8Array.from(b,c=>c.charCodeAt(0))))}catch(e){return null}}
+function goState(){if(!GO||!trips.length)return;const o=GO;GO=null;
+  const p={tab:TABS.some(t=>t[0]===o.t)?o.t:'summary'};
+  // рейс — по теплоходу и датам: у одного теплохода бывают рейсы с одной датой отправления (23.08–27.08 и 23.08–01.09)
+  if(p.tab==='trip'||p.tab==='ship'){const t=o.s&&(trips.find(t=>t.ship===o.sh&&t.s0===o.s&&(!o.e||t.e0===o.e))||trips.find(t=>t.ship===o.sh&&t.s0===o.s));
+    if(t)Object.assign(p,{ship:t.ship,trip:t.id});else if(ships.includes(o.sh))p.ship=o.sh;
+    if(p.tab==='trip'&&!t)p.tab=p.ship?'ship':'summary'}               // рейса уже нет — теплоход или сводка
+  if(p.tab==='clients')Object.assign(p,{cf:o.cf||'crit',q:o.q||'',ct:CTYPES.slice()});
+  if(p.tab==='pub')Object.assign(p,{pp:'',ps:'',py:''});
+  Object.assign(S,p);save();GO_AFTER={sec:o.sec,rid:o.id,aid:o.a}}
+function goScroll(){const a=GO_AFTER;if(!a)return;let el=null;
+  if(a.rid){if(S.tab==='pub'&&!PUB)return;                           // отзывы ещё загружаются — дождёмся
+    el=[...document.querySelectorAll('[data-rid]')].find(x=>x.dataset.rid===a.rid)||document.getElementById('pub-neg')}
+  else if(a.aid)el=[...document.querySelectorAll('[data-aid]')].find(x=>x.dataset.aid===a.aid)||null;   // анкета в «Критиках рейса»
+  else if(a.sec)el=document.getElementById(a.sec);
+  GO_AFTER=null;
+  if(el)requestAnimationFrame(()=>{el.scrollIntoView({block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')})}
+
+/* state */
+const S={tab:'summary',ship:null,trip:null,heat:'dev',cf:'crit',q:'',route:'',pp:'',ps:'',py:'',cm:''};
+try{const s=JSON.parse(localStorage.getItem('nps-state')||'{}');Object.assign(S,s)}catch(e){}
+const TABS=[['summary','Сводка'],['ships','Все теплоходы'],['ship','Теплоход'],['cruises','Круизы'],['trip','Рейс'],['clients','Клиенты'],['pub','Площадки'],['comp','Конкуренты']];
+if(location.hash&&TABS.some(t=>t[0]===location.hash.slice(1)))S.tab=location.hash.slice(1);
+function save(){try{localStorage.setItem('nps-state',JSON.stringify(S))}catch(e){}}
+// История переходов между вкладками — для кнопки «Назад» (как в отчёте «Заявки Созвездия»)
+const HIST=[];
+function go(tab,patch={}){HIST.push({s:JSON.stringify(S),y:scrollY});if(HIST.length>30)HIST.shift();Object.assign(S,patch,{tab});save();render();window.scrollTo({top:0});navState()}
+function goBack(){const h=HIST.pop();if(!h)return;Object.assign(S,JSON.parse(h.s));save();render();window.scrollTo({top:h.y||0});navState()}
+function navState(){$('#btn-back').hidden=!HIST.length;$('#btn-top').hidden=scrollY<400}
+
+function render(){
+  $('#tabs').innerHTML=TABS.map(([k,l])=>`<button role="tab" aria-selected="${S.tab===k}" data-tab="${k}">${l}</button>`).join('');
+  $('#tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(b&&e.detail)b.blur();if(b&&trips.length)go(b.dataset.tab)};
+  hideTip();
+  if(!trips.length)return;
+  ({summary:vSummary,ships:vShips,ship:vShip,cruises:vCruises,trip:vTrip,clients:vClients,pub:vPub,comp:vComp})[S.tab]();
+  $('#dq-slot').innerHTML=dataQuality();   // «Качество данных» — в подвале, свёрнуто
+  goScroll();
+}
+
+/* Telegram: страница-обёртка Mini App передаёт initData (подписанные Telegram данные о пользователе).
+   Отчёт спрашивает её через postMessage; если обёртки нет (открыт напрямую или в Google Sites) — пустая строка. */
+/* Обёртка может быть не самым верхним окном: в веб-версии Telegram цепочка web.telegram.org → обёртка → script.google.com → отчёт.
+   Поэтому сообщения шлём всем родительским окнам, а ответ принимаем от любого из них. */
+const SZ_UP=(()=>{const a=[];let w=window;try{while(w!==w.parent&&a.length<6){w=w.parent;a.push(w)}}catch(e){}return a})();
+function toWrap(msg){SZ_UP.forEach(w=>{try{w.postMessage(msg,'*')}catch(e){}})}
+let SZ_LOGIN='';   // вход из браузера (виджет Telegram Login в обёртке): «login:…»
+const TG_INIT=new Promise(res=>{
+  if(window.top===window){res('');return}
+  let got=false;
+  addEventListener('message',e=>{if(SZ_UP.indexOf(e.source)<0||!e.data)return;
+    if(e.data.type==='sz-tg'){got=true;fsState(e.data);if(e.data.go)GO=goDecode(e.data.go);res(e.data.initData||'')}
+    if(e.data.type==='sz-fs')fsState(e.data);
+    if(e.data.type==='sz-login'&&/^login:/.test(e.data.initData||'')){SZ_LOGIN=String(e.data.initData);load(false)}
+    if(e.data.type==='sz-go'){GO=goDecode(e.data.go);if(trips.length){HIST.push({s:JSON.stringify(S),y:scrollY});goState();render();navState()}}});   // новая ссылка в открытом приложении
+  try{toWrap({type:'sz-hello'})}catch(e){}
+  setTimeout(()=>{if(!got)res('')},800);
+});
+/** Понятный текст для ошибок доступа (AUTH_… приходят с сервера). */
+function authMsg(e){
+  const m=String(e&&e.message||e);
+  if(/AUTH_DENIED:(\d+)/.test(m))return`<b>Нет доступа к отчёту.</b> Ваш Telegram ID: <b>${m.match(/AUTH_DENIED:(\d+)/)[1]}</b>. `+({sent:'Запрос отправлен администратору — когда он подтвердит, бот пришлёт сообщение.',
+    repeat:'Запрос администратору уже отправлен недавно. Если доступ срочно нужен, передайте ему этот ID.',
+    noadmin:'В списке доступа нет администратора — запрос отправить некому. Впишите этот ID в лист «Доступ» вручную.'}[(m.match(/AUTH_DENIED:\d+:(\w+)/)||[])[1]]||'Передайте этот ID администратору, чтобы вас добавили в список.');
+  if(/AUTH_TG/.test(m)){   // нужен вход: обёртка в браузере покажет кнопку «Войти через Telegram» для этого бота
+    const bot=(m.match(/AUTH_TG:([A-Za-z0-9_]{3,})/)||[])[1]||'';
+    if(window.top!==window&&bot)try{toWrap({type:'sz-need-login',bot:bot})}catch(e){}
+    return'<b>Нужен вход.</b> В Telegram — откройте отчёт заново кнопкой в чате с ботом. В браузере — нажмите «Войти через Telegram» и подтвердите вход в Telegram (вход запомнится на 7 дней).'}
+  if(/AUTH_SETUP/.test(m))return'<b>Доступ ещё не настроен.</b> '+esc(m.replace(/^.*AUTH_SETUP:\s*/,''));
+  return null;
+}
+
+/* Загрузка: внутри Apps Script — через google.script.run, в превью — из встроенного NPS_PAYLOAD. */
+/* Последний ответ сервера хранится на устройстве (IndexedDB): при открытии отчёт рисуется сразу из него, свежие данные
+   приходят следом. В копии нет персональных данных — покупатель и номер заказа стираются (152-ФЗ), поэтому «Клиенты»
+   ждут ответа сервера (LC_PART). Нет доступа — копия стирается. */
+const LC_KEY='nps-last';let LC_PART=false;
+function lcDb(){return new Promise((res,rej)=>{const r=indexedDB.open('sz-cache',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function lcGet(){return lcDb().then(db=>new Promise(res=>{const q=db.transaction('kv').objectStore('kv').get(LC_KEY);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)})).catch(()=>null)}
+function lcPut(v){lcDb().then(db=>{const s=db.transaction('kv','readwrite').objectStore('kv');v==null?s.delete(LC_KEY):s.put(v,LC_KEY)}).catch(()=>{})}
+function lcStrip(P){return JSON.stringify(Object.assign({},P,{rows:P.rows.map(r=>{const c=r.slice();c[5]='';c[7]='';return c})}))}
+/* Этап 2 (#58): страница лежит на GitHub Pages рядом с обёрткой, запросы — к Apps Script (doPost: data / pub / comp / csv).
+   SZ_API (адрес /exec) подставляет сборка tools/miniapp_build.py. text/plain — без предварительного запроса CORS.
+   Обёртка начинает запрос данных сразу при открытии (SZ_PREFETCH) — страница забирает его ответ, а не ждёт свой. */
+function szApi(fn,args){
+  return fetch(window.SZ_API,{method:'POST',body:JSON.stringify(Object.assign({fn},args)),redirect:'follow',credentials:'omit'})
+    .then(r=>{if(!r.ok)throw new Error('Сервер ответил '+r.status);return r.text()}).then(szErr)}
+function szErr(t){if(t.startsWith('{"__error"'))throw new Error(JSON.parse(t).__error);return t}
+function szPrefetch(init){try{const p=parent!==window&&parent.SZ_PREFETCH;if(p&&p.init===init){parent.SZ_PREFETCH=null;return p.res.then(szErr)}}catch(e){}return null}
+function load(force){
+  const btns=document.querySelectorAll('.js-refresh:not(.js-refresh-m)'),mb=document.querySelector('.js-refresh-m');
+  btns.forEach(b=>{b.disabled=true;b.textContent='Обновляю…'});
+  if(mb){mb.disabled=true;mb.classList.add('busy');mb.querySelector('.t-full').textContent='Обновляю…';mb.querySelector('.t-short').textContent='Обновляю…'}
+  if(!trips.length)$('#view').innerHTML='<div class="loading"><div class="spin"></div>Загружаю анкеты со всех листов теплоходов…</div>';
+  PUB=null;COMP=null;                         // площадки и конкуренты перечитаются при открытии вкладки
+  const reset=()=>{btns.forEach(b=>{b.disabled=false;b.textContent='Обновить данные'});
+    if(mb){mb.disabled=false;mb.classList.remove('busy');mb.querySelector('.t-full').textContent='Обновить данные';mb.querySelector('.t-short').textContent='Обновить'}};
+  let fresh=false;   // ответ сервера уже пришёл — копию с устройства не показываем
+  const fail=e=>{reset();fresh=true;const a=authMsg(e);
+    if(a){lcPut(null);LC_PART=false}
+    else if(trips.length){$('#stamp').textContent='Данные на '+DATA.generated+' · не удалось обновить';LC_PART=false;if(S.tab==='clients')render();return}   // остаются показанные данные
+    $('#filters').innerHTML='';$('#view').innerHTML=a?`<div class="err">${a}</div>`:`<div class="err"><b>Не удалось загрузить данные.</b> ${esc(e&&e.message||e)}<br>Проверьте доступ скрипта к таблице и нажмите «Обновить данные».</div>`};
+  const done=(res,cached)=>{if(cached&&fresh)return;
+    if(!cached){reset();fresh=true}
+    try{const P=typeof res==='string'?JSON.parse(res):res;
+      if(!cached)lcPut(lcStrip(P));
+      LC_PART=!!cached;build(P);goState();render();if(cached)$('#stamp').textContent+=' · обновляю…'}
+    catch(e){if(cached){LC_PART=false;lcPut(null);return}fail(e)}};
+  if(!force&&!trips.length&&window.indexedDB)lcGet().then(v=>{if(v)done(v,true)});
+  if(window.google&&google.script&&google.script.run)TG_INIT.then(i=>SZ_LOGIN||i).then(init=>google.script.run.withSuccessHandler(done).withFailureHandler(fail).getNpsData(!!force,init));
+  else if(window.SZ_API)TG_INIT.then(i=>SZ_LOGIN||i).then(init=>(!force&&szPrefetch(init))||szApi('data',{force:!!force,init})).then(done,fail);   // страница с GitHub Pages
+  else if(window.NPS_PAYLOAD)setTimeout(()=>done(window.NPS_PAYLOAD),0);
+  else fail('Страница открыта вне Apps Script, данных нет.');
+}
+document.querySelectorAll('.js-refresh').forEach(b=>b.onclick=e=>{if(e.detail)b.blur();load(true)});
+
+/* Масштаб: 80–130 %, шаг 10 %. Хранится на этом устройстве. */
+const ZOOMS=[0.8,0.9,1,1.1,1.2,1.3];
+let zoom=1;try{const z=+localStorage.getItem('nps-zoom');if(ZOOMS.includes(z))zoom=z}catch(e){}
+function applyZoom(z){zoom=z;document.documentElement.style.zoom=z;const v=document.querySelector('.zoom-val');if(v)v.textContent=Math.round(z*100)+'%';
+  document.querySelector('[data-zoom="-1"]').disabled=z<=ZOOMS[0];document.querySelector('[data-zoom="1"]').disabled=z>=ZOOMS[ZOOMS.length-1];
+  try{localStorage.setItem('nps-zoom',z)}catch(e){}
+  if(typeof fitHeader==='function')fitHeader();if(typeof navHeight==='function')navHeight()}
+function stepZoom(d){const i=ZOOMS.indexOf(zoom);applyZoom(d===0?1:ZOOMS[Math.max(0,Math.min(ZOOMS.length-1,i+d))]);hideTip()}
+document.querySelector('.zoom').onclick=e=>{const b=e.target.closest('[data-zoom]');if(!b)return;if(e.detail)b.blur();stepZoom(+b.dataset.zoom)};
+// Внутри Telegram родного масштаба нет — ловим Ctrl/Cmd + «+», «−», «0». В обычном браузере не мешаем его масштабу.
+if(window.top!==window)addEventListener('keydown',e=>{if(!(e.ctrlKey||e.metaKey))return;
+  const d={'=':1,'+':1,'-':-1,'_':-1,'0':0}[e.key];if(d===undefined)return;e.preventDefault();stepZoom(d)});
+applyZoom(zoom);
+
+/* Полный экран: кнопка видна, только если обёртка в Telegram на компьютере это умеет. */
+const FS_ICON={
+  on:'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  off:'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+let FS=false;
+function fsState(d){if(!d.canFullscreen){document.querySelectorAll('#btn-fs,.js-fs').forEach(b=>b.hidden=true);if(typeof fitHeader==='function')fitHeader();return}FS=!!d.isFullscreen;
+  document.querySelectorAll('#btn-fs,.js-fs').forEach(b=>{b.hidden=false;b.innerHTML=FS?FS_ICON.off:FS_ICON.on;b.title=b.ariaLabel=FS?'Открыть в окне':'Во весь экран'});
+  if(typeof fitHeader==='function')fitHeader()}
+document.querySelectorAll('#btn-fs,.js-fs').forEach(b=>b.onclick=e=>{if(e.detail)e.currentTarget.blur();try{toWrap({type:'sz-fs-toggle',isFullscreen:FS})}catch(err){}});
+
+/* Тема: по умолчанию светлая; значок переключает светлая ↔ тёмная. Выбор хранится на этом устройстве. */
+// Значки темы с заливкой: луна — цветом значков, солнце — фирменным оранжевым (как в отчёте «Заявки Созвездия»)
+const ICON={moon:'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20.5 12.8A8.5 8.5 0 1 1 11.2 3.5a6.6 6.6 0 0 0 9.3 9.3z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  sun:'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="color:var(--orange)"><circle cx="12" cy="12" r="4.6" fill="currentColor"/><path d="M12 2.5v2.3M12 19.2v2.3M2.5 12h2.3M19.2 12h2.3M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'};
+function applyTheme(t){
+  document.documentElement.dataset.theme=t;
+  const next=t==='dark'?'светлую':'тёмную';
+  document.querySelectorAll('#btn-theme,.js-theme').forEach(b=>{b.innerHTML=t==='dark'?ICON.sun:ICON.moon;b.title=b.ariaLabel='Включить '+next+' тему'});
+  // Обёртка Telegram красит свой фон и шапку Telegram в цвет темы — иначе сверху и снизу белые полосы
+  if(window.top!==window)try{toWrap({type:'sz-theme',theme:t,bg:getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()})}catch(e){}
+}
+let theme='light';try{if(localStorage.getItem('nps-theme')==='dark')theme='dark'}catch(e){}
+applyTheme(theme);
+document.querySelectorAll('#btn-theme,.js-theme').forEach(b=>b.onclick=e=>{if(e.detail)e.currentTarget.blur();   // после клика мышью/пальцем — без рамки фокуса
+  theme=theme==='dark'?'light':'dark';try{localStorage.setItem('nps-theme',theme)}catch(err){}applyTheme(theme);render()});
+
+/* ---------- Площадки: публичные отзывы ---------- */
+// PUB.rows: [площадка, дата ISO, оценка, шкала, тональность, теплоходы, тезисы, заголовок, текст, ссылка, ID, лайки]
+let PUB=null,PUB_LOADING=false;
+function loadPub(){
+  if(PUB_LOADING)return;PUB_LOADING=true;
+  const done=res=>{PUB_LOADING=false;PUB=typeof res==='string'?JSON.parse(res):res;if(S.tab==='pub')render()};
+  const fail=e=>{PUB_LOADING=false;PUB={rows:[],error:String(e&&e.message||e),auth:authMsg(e)};if(S.tab==='pub')render()};
+  if(window.google&&google.script&&google.script.run)TG_INIT.then(i=>SZ_LOGIN||i).then(init=>google.script.run.withSuccessHandler(done).withFailureHandler(fail).getPubData(init));
+  else if(window.SZ_API)TG_INIT.then(i=>SZ_LOGIN||i).then(init=>szApi('pub',{init})).then(done,fail);
+  else if(window.PUB_PAYLOAD)setTimeout(()=>done(window.PUB_PAYLOAD),0);
+  else fail('Нет данных площадок.');
+}
+const TONE={'позитив':'P','нейтрально':'N','негатив':'D'};
+function pubAgg(L){const a={n:L.length,P:0,N:0,D:0,u:0,rs:[],lk:0,lkN:0};for(const r of L){const t=TONE[r[4]];t?a[t]++:a.u++;if(r[2]!=null)a.rs.push(r[2]/(r[3]||5)*5);if(r[11]!=null){a.lk+=r[11];a.lkN++}}
+  a.avg=a.rs.length?Math.round(a.rs.reduce((x,y)=>x+y,0)/a.rs.length*100)/100:null;a.t=a.P+a.N+a.D;return a}
+const pct=(x,n)=>n?Math.round(x/n*100):0;
+function stars(v){return v==null?'<span class="muted">—</span>':`<b>${v.toFixed(2).replace('.',',')}</b><span class="muted"> из 5</span>`}
+function pndT(a,h){return pnd({n:a.t,P:a.P,N:a.N,D:a.D},h)}
+/* Соцсети (ВК): оценок нет — вместо средней показываем лайки, вместо пустой полосы — «не размечено». */
+const HEART='<span aria-hidden="true" style="color:var(--bad)">♡</span>';
+function avgCell(a){   // оценки меньше чем у половины (соцсети) — показываем лайки, а среднюю по единицам — мелко
+  if(a.avg!=null&&(a.rs.length*2>=a.n||!a.lkN))return stars(a.avg);
+  if(a.lkN)return`${HEART} <b>${a.lk}</b>${a.rs.length?`<br><span class="muted" style="font-size:11.5px">оценка у ${a.rs.length}: ${a.avg.toFixed(2).replace('.',',')}</span>`:''}`;
+  return'<span class="muted">без оценок</span>'}
+function toneCell(a){if(!a.t)return`<span class="muted" style="font-size:12px">тональность не размечена</span>`;
+  return`${pndT(a,8)}<span class="muted" style="font-size:11.5px">${pct(a.P,a.t)}% · ${pct(a.N,a.t)}% · ${pct(a.D,a.t)}%${a.u?` · без разметки ${a.u}`:''}</span>`}
+const TONE_PILL={'позитив':'z-good','нейтрально':'z-low','негатив':'z-bad'};
+function tonePill(t){return TONE_PILL[t]?`<span class="pill ${TONE_PILL[t]}">${esc(t)}</span>`:'<span class="pill z-low">не размечено</span>'}
+function parseTh(s){return String(s||'').split(';').map(x=>x.trim()).filter(Boolean).map(x=>{const m=x.match(/^(.*)\s([+−±])$/);return m?[m[1],m[2]]:[x,'']})}
+
+function vPub(){
+  const vv=$('#view');
+  if(!PUB){$('#filters').innerHTML='';vv.innerHTML='<div class="loading"><div class="spin"></div>Загружаю отзывы с площадок…</div>';loadPub();return}
+  if(PUB.error){vv.innerHTML=`<div class="err">${PUB.auth||`<b>Не удалось загрузить отзывы с площадок.</b> ${esc(PUB.error)}`}</div>`;return}
+  const ALL=PUB.rows;
+  const plats=[...new Set(ALL.map(r=>r[0]))].sort(),years=[...new Set(ALL.map(r=>r[1].slice(0,4)).filter(Boolean))].sort().reverse();
+  const shipList=[...new Set(ALL.flatMap(r=>r[5].split(',').map(x=>x.trim()).filter(Boolean)))].sort();
+  const opt=(v,l,cur)=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(l)}</option>`;
+  $('#filters').innerHTML=`<label>Площадка<select id="f-pp">${opt('','Все площадки',S.pp)}${plats.map(p=>opt(p,p,S.pp)).join('')}</select></label>
+   <label>Теплоход<select id="f-ps">${opt('','Все теплоходы',S.ps)}${shipList.map(p=>opt(p,p,S.ps)).join('')}</select></label>
+   <label>Год<select id="f-py">${opt('','Все годы',S.py)}${years.map(y=>opt(y,y,S.py)).join('')}</select></label>`;
+  $('#filters').onchange=e=>{const k={'f-pp':'pp','f-ps':'ps','f-py':'py'}[e.target.id];if(k){S[k]=e.target.value;save();render()}};
+  const L=ALL.filter(r=>(!S.pp||r[0]===S.pp)&&(!S.ps||r[5].split(',').map(x=>x.trim()).includes(S.ps))&&(!S.py||r[1].startsWith(S.py)));
+  const A=pubAgg(L);
+  const noRating=L.filter(r=>r[2]==null).length;
+
+  // По площадкам, годам, теплоходам
+  const group=(key)=>{const g=new Map();for(const r of L)for(const k of [].concat(key(r)))(g.get(k)||g.set(k,[]).get(k)).push(r);return[...g]};
+  const byPlat=group(r=>r[0]).map(([k,R])=>({k,a:pubAgg(R)})).sort((x,y)=>y.a.n-x.a.n);
+  const byYear=group(r=>r[1].slice(0,4)||'без даты').map(([k,R])=>({k,a:pubAgg(R)})).sort((x,y)=>x.k.localeCompare(y.k));
+  const byShip=group(r=>{const s=r[5].split(',').map(x=>x.trim()).filter(Boolean);return s.length?s:['Не указан']}).map(([k,R])=>{
+    const neg={};for(const r of R)for(const[t,z]of parseTh(r[6]))if(z==='−')neg[t]=(neg[t]||0)+1;
+    return{k,a:pubAgg(R),neg:Object.entries(neg).sort((x,y)=>y[1]-x[1]).slice(0,2)}}).sort((x,y)=>(x.k==='Не указан')-(y.k==='Не указан')||y.a.n-x.a.n);
+
+  // Темы: сколько раз хвалят и ругают
+  const th={};for(const r of L)for(const[t,z]of parseTh(r[6])){th[t]=th[t]||{p:0,m:0};if(z==='+')th[t].p++;else if(z==='−')th[t].m++;else if(z==='±'){th[t].p++;th[t].m++}}
+  const themes=Object.entries(th).map(([k,v])=>({k,...v})).sort((x,y)=>y.m-x.m||y.p-x.p);
+  const mx=Math.max(1,...themes.map(t=>Math.max(t.p,t.m)));
+
+  const neg=L.filter(r=>r[4]==='негатив'||(r[2]!=null&&r[2]/(r[3]||5)*5<3.5)).sort((x,y)=>y[1].localeCompare(x[1])).slice(0,12);
+  const fmtIso=d=>d?d.slice(8,10)+'.'+d.slice(5,7)+'.'+d.slice(0,4):'—';
+  const rowTbl=(label,x,extra='')=>`<tr><td class="st-title" data-l="${label}"><div>${esc(x.k)}</div></td><td class="r" data-l="Отзывов"><div>${x.a.n}</div></td><td class="r nw" data-l="${x.a.lkN&&!(x.a.avg!=null&&x.a.rs.length*2>=x.a.n)?'Лайки':'Средняя'}"><div>${avgCell(x.a)}</div></td>
+    <td data-l="Тональность"><div style="min-width:120px">${toneCell(x.a)}</div></td>${extra}</tr>`;
+  // Соцсети: комментарии без оценки — самые заметные (по лайкам), затем свежие
+  const social=L.filter(r=>r[2]==null).sort((x,y)=>(y[11]??-1)-(x[11]??-1)||y[1].localeCompare(x[1]));
+  const untagged=ALL.filter(r=>!TONE[r[4]]).length;
+
+  vv.innerHTML=`<div class="grid">
+   <div class="grid g-kpi">${kpiPlain('Отзывов на площадках',A.n,'шт.',`${byPlat.length} площад${byPlat.length===1?'ка':byPlat.length<5?'ки':'ок'}${noRating?` · без оценки ${noRating}`:''}`)}
+    <div class="panel kpi"><div class="lbl">Средняя оценка</div><div class="val">${A.avg==null?'—':A.avg.toFixed(2).replace('.',',')}<small>из 5</small></div><div class="foot"><span>по ${A.rs.length} отзывам с оценкой</span></div></div>
+    <div class="panel kpi"><div class="lbl">Тональность</div><div class="val">${pct(A.P,A.t)}%<small>позитив</small></div>${pndT(A,10)}<div class="pnd-leg"><span class="p">Позитив ${A.P}</span><span class="n">Нейтр. ${A.N}</span><span class="d">Негатив ${A.D}</span></div></div>
+    ${kpiPlain('Негативных',A.D,'отзывов',`${pct(A.D,A.t)}% от размеченных`)}</div>
+   <div class="grid g-2">
+    <div class="panel"><h2>Площадки</h2><p class="sub">Оценка приведена к шкале из 5 · тональность: позитив · нейтрально · негатив</p>
+     <div class="tbl-wrap"><table class="stack"><thead><tr><th>Площадка</th><th class="r">Отзывов</th><th class="r">Средняя / лайки</th><th>Тональность</th></tr></thead><tbody>${byPlat.map(x=>rowTbl('Площадка',x)).join('')}</tbody></table></div></div>
+    <div class="panel"><h2>Динамика по годам</h2><p class="sub">Сколько отзывов и какая доля негатива</p>
+     <div class="tbl-wrap"><table class="stack"><thead><tr><th>Год</th><th class="r">Отзывов</th><th class="r">Средняя</th><th>Тональность</th></tr></thead><tbody>${byYear.map(x=>rowTbl('Год',x)).join('')}</tbody></table></div></div>
+   </div>
+   <div class="panel"><h2>Что хвалят и на что жалуются</h2><p class="sub">Темы из «Основных тезисов»: сколько раз тему хвалят и сколько ругают · сначала темы с наибольшим числом жалоб</p>
+    ${themes.length?`<ul class="pub-themes">${themes.map(t=>`<li><span>${esc(t.k)}</span><div class="pt-bar neg"><i style="width:${t.m/mx*100}%"></i><b>${t.m||''}</b></div><div class="pt-bar pos"><i style="width:${t.p/mx*100}%"></i><b>${t.p||''}</b></div></li>`).join('')}</ul>
+    <div class="pnd-leg"><span class="d">Жалобы</span><span class="p">Похвала</span></div>`:'<p class="muted">Тезисы ещё не размечены: в таблице «Площадки» нажмите «Отзывы» → «Разметить тезисы».</p>'}</div>
+   <div class="panel"><h2>Теплоходы</h2><p class="sub">Теплоход определяется по названию в тексте отзыва</p>
+    <div class="tbl-wrap"><table class="stack"><thead><tr><th>Теплоход</th><th class="r">Отзывов</th><th class="r">Средняя</th><th>Тональность</th><th>Частые жалобы</th></tr></thead><tbody>${byShip.map(x=>rowTbl('Теплоход',x,`<td data-l="Жалобы"><div>${x.neg.map(([t,c])=>`<span class="chip bad">${esc(t)} · ${c}</span>`).join('')||'<span class="muted">—</span>'}</div></td>`)).join('')}</tbody></table></div></div>
+   ${social.length?`<div class="panel"><h2>Комментарии в соцсетях</h2><p class="sub">Посты и комментарии без оценки (ВКонтакте) · сначала те, что набрали больше лайков · тональность — по словарю</p>
+    <div class="quotes">${social.slice(0,8).map(r=>`<div class="quote"><div class="who" style="margin:0 0 6px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center">${tonePill(r[4])}<span>${fmtIso(r[1])} · ${esc(r[0])}${r[5]?' · '+esc(r[5]):''}</span>${r[11]!=null?`<span>${HEART} <b>${r[11]}</b></span>`:''}</div>${esc(r[8].slice(0,280))}${r[8].length>280?'…':''}
+     <div style="margin-top:6px">${parseTh(r[6]).map(t=>`<span class="chip${t[1]==='−'?' bad':''}">${esc(t[0])} ${t[1]}</span>`).join('')}${r[9]?` <a href="${esc(r[9])}" target="_blank" rel="noopener">Открыть</a>`:''}</div></div>`).join('')}</div>
+    ${social.length>8?`<p class="sub" style="margin:10px 0 0">Показаны 8 из ${social.length}</p>`:''}</div>`:''}
+   <div class="panel" id="pub-neg"><h2>Свежие негативные отзывы</h2><p class="sub">Тональность «негатив» или оценка ниже 3,5 из 5 · сначала новые</p>
+    ${neg.length?`<div class="quotes">${neg.map(r=>`<div class="quote" data-rid="${esc(r[10]||'')}"><div class="who" style="margin:0 0 6px">${fmtIso(r[1])} · ${esc(r[0])}${r[5]?' · '+esc(r[5]):''}${r[2]!=null?` · <b>${String(r[2]).replace('.',',')}</b> из ${r[3]||5}`:''}</div>${r[7]?`<b>${esc(r[7])}</b><br>`:''}${esc(r[8].slice(0,280))}${r[8].length>280?'…':''}
+     <div style="margin-top:6px">${parseTh(r[6]).filter(t=>t[1]!=='+').map(t=>`<span class="chip bad">${esc(t[0])} ${t[1]}</span>`).join('')}${r[9]?` <a href="${esc(r[9])}" target="_blank" rel="noopener">Открыть отзыв</a>`:''}</div></div>`).join('')}</div>`:'<p class="muted">Негативных отзывов в выборке нет.</p>'}</div>
+   <p class="muted" style="font-size:12px">Данные площадок на ${esc(PUB.generated||'')}. Тональность без оценки (например, ВК) и тезисы размечены по словарю в таблице «Площадки» — это приблизительная разметка, с оценкой отзыва она совпадает примерно в 3 случаях из 4. Звёзды площадок в NPS не пересчитываются. У ВКонтакте оценок нет: вместо средней — лайки, тональность только по словарю.${untagged?` Без тональности ${untagged} отз. — в таблице «Площадки» нажмите «Отзывы» → «Разметить тезисы».`:''}</p>
+  </div>`;
+}
+
+/* ---------- Конкуренты: таблица «Площадки», лист «Отзывы» — все компании ---------- */
+// Всё из таблицы «Площадки». COMP.rows (лист «Отзывы»): [компания, дата ISO, теплоход, площадка, звёзды из 5, тональность, суть/текст, ссылка, откуда, тезисы]
+// COMP.ratings — лист «Рейтинг на площадках»; COMP.since — с какой даты есть отзывы конкурентов
+let COMP=null,COMP_LOADING=false;
+const COMP_MIN=10;   // меньше 10 отзывов за период — «мало данных», выводы не делаем
+function loadComp(){
+  if(COMP_LOADING)return;COMP_LOADING=true;
+  const done=res=>{COMP_LOADING=false;COMP=typeof res==='string'?JSON.parse(res):res;if(S.tab==='comp')render()};
+  const fail=e=>{COMP_LOADING=false;COMP={rows:[],error:String(e&&e.message||e),auth:authMsg(e)};if(S.tab==='comp')render()};
+  if(window.google&&google.script&&google.script.run)TG_INIT.then(i=>SZ_LOGIN||i).then(init=>google.script.run.withSuccessHandler(done).withFailureHandler(fail).getCompData(init));
+  else if(window.SZ_API)TG_INIT.then(i=>SZ_LOGIN||i).then(init=>szApi('comp',{init})).then(done,fail);
+  else if(window.COMP_PAYLOAD)setTimeout(()=>done(window.COMP_PAYLOAD),0);
+  else fail('Нет данных о конкурентах.');
+}
+const MONTHS_RU=['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+const monthLbl=m=>`${MONTHS_RU[+m.slice(5)-1]} ${m.slice(0,4)}`;
+function compAgg(L){const a={n:L.length,P:0,N:0,D:0,st:[]};for(const r of L){if(r[5]==='позитив')a.P++;else if(r[5]==='нейтрально')a.N++;else if(r[5]==='негатив')a.D++;if(r[4]!=null)a.st.push(r[4])}
+  a.t=a.P+a.N+a.D;a.avg=a.st.length?a.st.reduce((x,y)=>x+y,0)/a.st.length:null;return a}
+const fmtStar=v=>v==null?'—':v.toFixed(2).replace('.',',');
+
+function vComp(){
+  const vv=$('#view');
+  if(!COMP){$('#filters').innerHTML='';vv.innerHTML='<div class="loading"><div class="spin"></div>Загружаю отзывы о конкурентах…</div>';loadComp();return}
+  if(COMP.error){$('#filters').innerHTML='';vv.innerHTML=`<div class="err">${COMP.auth||`<b>Не удалось загрузить таблицу конкурентов.</b> ${esc(COMP.error)}`}</div>`;return}
+  const CO=COMP.companies,US=CO[0],ALL=COMP.rows;
+  // Период: последние 12 месяцев (по умолчанию) · год · месяц из последних 12 · всё время. История у площадок — с 2011 года.
+  const now=new Date(),curM=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const y12=new Date(now);y12.setFullYear(now.getFullYear()-1);const from12=y12.toISOString().slice(0,10);
+  const months=[...new Set(ALL.map(r=>r[1].slice(0,7)))].sort().reverse().filter(m=>m>=from12.slice(0,7));
+  const years=[...new Set(ALL.map(r=>r[1].slice(0,4)))].sort().reverse();
+  if(S.cm&&S.cm!=='all'&&!months.includes(S.cm)&&!years.includes(S.cm))S.cm='';
+  const opt=(v,l)=>`<option value="${v}"${v===S.cm?' selected':''}>${l}</option>`;
+  $('#filters').innerHTML=`<label>Период<select id="f-cm">${opt('','Последние 12 месяцев')}<optgroup label="Год">${years.map(y=>opt(y,y+(y===curM.slice(0,4)?' (идёт)':''))).join('')}</optgroup><optgroup label="Месяц">${months.map(m=>opt(m,monthLbl(m)+(m===curM?' (идёт)':''))).join('')}</optgroup>${opt('all','Всё время')}</select></label>`;
+  $('#f-cm').onchange=e=>{S.cm=e.target.value;save();render()};
+  const inP=r=>S.cm===''?r[1]>=from12:S.cm==='all'?true:r[1].startsWith(S.cm);
+  const pLbl=S.cm===''?'последние 12 месяцев':S.cm==='all'?'всё время'+(COMP.since?' (с '+fmtIso(COMP.since)+')':''):S.cm.length===4?S.cm+' год'+(S.cm===curM.slice(0,4)?' (идёт)':''):monthLbl(S.cm)+(S.cm===curM?' (месяц ещё идёт)':'');
+  const L=ALL.filter(inP);
+  const by=co=>L.filter(r=>r[0]===co);
+  const A=Object.fromEntries(CO.map(co=>[co,compAgg(by(co))]));
+  const low=a=>a.n<COMP_MIN;
+  const mark=co=>co===US?' style="background:var(--accent-soft)"':'';
+  const lowPill='<span class="pill z-low">мало данных</span>';
+  // 1) Сводная таблица
+  const mainRow=co=>{const a=A[co];const src={};by(co).forEach(r=>src[r[3]]=(src[r[3]]||0)+1);const top=Object.entries(src).sort((x,y)=>y[1]-x[1])[0];
+    return`<tr${mark(co)}><td class="st-title" data-l="Компания"><div><b>${esc(co)}</b></div></td><td class="r" data-l="Отзывов"><div>${a.n}</div></td>
+     <td class="r nw" data-l="Средняя"><div${low(a)?' class="muted"':''}><b>${fmtStar(a.avg)}</b><span class="muted"> из 5</span></div></td>
+     <td data-l="Тональность"><div style="min-width:130px">${a.t?pnd({n:a.t,P:a.P,N:a.N,D:a.D},8)+`<span class="muted" style="font-size:11.5px">${pct(a.P,a.t)}% · ${pct(a.N,a.t)}% · ${pct(a.D,a.t)}%</span>`:'<span class="muted">—</span>'}</div></td>
+     <td data-l="Больше всего с площадки"><div>${top?`${esc(top[0])} <span class="muted">${pct(top[1],a.n)}%</span>`:'—'}</div></td>
+     <td data-l="Как собраны"><div class="muted" style="font-size:12px">${(()=>{const m=by(co).filter(r=>r[8]==='ручной разбор').length;return a.n?(m===a.n?'ручной разбор':m?`закладка ${pct(a.n-m,a.n)}% · разбор ${pct(m,a.n)}%`:'закладка'):'—'})()}</div></td>
+     <td data-l="Выборка"><div>${low(a)?lowPill:''}</div></td></tr>`};
+  // 2) По площадкам — сравниваем одинаковое с одинаковым
+  const plats=[...new Set(L.map(r=>r[3]))].sort((x,y)=>L.filter(r=>r[3]===y).length-L.filter(r=>r[3]===x).length);
+  const platCell=(p,co)=>{const a=compAgg(L.filter(r=>r[0]===co&&r[3]===p));return a.n?`<td class="r nw"${mark(co)}><span${a.n<3?' class="muted"':''}><b>${fmtStar(a.avg)}</b></span> <span class="muted" style="font-size:11.5px">· ${a.n}</span></td>`:`<td class="r muted"${mark(co)}>—</td>`};
+  // 3) Официальные оценки на площадках
+  const RT=COMP.ratings;
+  const ratingTbl=RT?`<div class="panel"><h2>Оценка компаний на площадках</h2><p class="sub">Общий рейтинг компании на сайте${RT.asOf?' на '+esc(RT.asOf):''} — лист «Рейтинг на площадках» в «Площадках», по каждой площадке последняя запись. Жирным — лучший в строке</p>
+    <div class="tbl-wrap"><table><thead><tr><th>Площадка</th>${RT.companies.map(c=>`<th class="r"${mark(c)}>${esc(c)}</th>`).join('')}</tr></thead><tbody>${RT.rows.map(([p,v])=>{const mx=Math.max(...v.filter(x=>x!=null));
+      return`<tr><td>${esc(p)}</td>${v.map((x,k)=>`<td class="r"${mark(RT.companies[k])}>${x==null?'—':x===mx?`<b>${String(x).replace('.',',')}</b>`:String(x).replace('.',',')}</td>`).join('')}</tr>`}).join('')}</tbody></table></div></div>`:'';
+  // 4) Темы: плюсы и минусы — из «Основных тезисов» (разметка по словарю, одинаковая для всех компаний)
+  const themeCount=co=>{const P={},M={};by(co).forEach(r=>parseTh(r[9]).forEach(([t,z])=>{if(z==='+'||z==='±')P[t]=(P[t]||0)+1;if(z==='−'||z==='±')M[t]=(M[t]||0)+1}));
+    const top=o=>Object.entries(o).sort((x,y)=>y[1]-x[1]).slice(0,5);return{plus:top(P),minus:top(M)}};
+  const TC=Object.fromEntries(CO.map(co=>[co,themeCount(co)]));
+  const themeList=(list,cls)=>list.length?`<ul class="comp-th">${list.map(([t,n])=>`<li><span>${esc(t)}</span><b class="${cls}">${n}</b></li>`).join('')}</ul>`:'<p class="muted" style="margin:4px 0 0">нет данных</p>';
+  const themes=CO.some(co=>TC[co].plus.length||TC[co].minus.length)?`<div class="panel"><h2>Что хвалят и за что ругают</h2><p class="sub">Темы из «Основных тезисов» за выбранный период · число — в скольких отзывах тему похвалили или поругали · первые 5. Разметка по словарю одна для всех компаний</p>
+    <div class="comp-grid">${CO.map(co=>`<div class="comp-card"${co===US?' data-us':''}><h3>${esc(co)}</h3><div class="grp-h">Хвалят</div>${themeList(TC[co].plus,'up')}<div class="grp-h">Ругают</div>${themeList(TC[co].minus,'dn')}</div>`).join('')}</div></div>`:'';
+  // 5) По месяцам
+  const monthTbl=months.length>1?`<div class="panel"><h2>По месяцам</h2><p class="sub">Последние 12 месяцев: средняя оценка и число отзывов</p><div class="tbl-wrap"><table><thead><tr><th>Месяц</th>${CO.map(c=>`<th class="r"${mark(c)}>${esc(c)}</th>`).join('')}</tr></thead><tbody>${months.map(m=>`<tr><td class="nw">${monthLbl(m)}${m===curM?' <span class="muted">(идёт)</span>':''}</td>${CO.map(co=>{const a=compAgg(ALL.filter(r=>r[0]===co&&r[1].startsWith(m)));return`<td class="r nw"${mark(co)}>${a.n?`<b${low(a)?' class="muted"':''}>${fmtStar(a.avg)}</b> <span class="muted" style="font-size:11.5px">· ${a.n}</span>`:'—'}</td>`}).join('')}</tr>`).join('')}</tbody></table></div></div>`:'';
+  vv.innerHTML=`<div class="grid">
+   <div class="panel"><h2>Сравнение с конкурентами</h2><p class="sub">Отзывы за ${pLbl} · таблица «Площадки», лист «Отзывы». Где отзывы собраны по-разному (см. «Как собраны»), количество не сравнивайте — только среднюю и доли</p>
+    <div class="tbl-wrap"><table class="stack"><thead><tr><th>Компания</th><th class="r">Отзывов</th><th class="r">Средняя</th><th>Тональность</th><th>Больше всего с площадки</th><th>Как собраны</th><th></th></tr></thead><tbody>${CO.map(mainRow).join('')}</tbody></table></div>
+    <div class="pnd-leg"><span class="p">Позитив</span><span class="n">Нейтрально</span><span class="d">Негатив</span></div></div>
+   <div class="panel"><h2>По площадкам</h2><p class="sub">Средняя оценка и число отзывов · сравнивайте внутри строки: на Яндекс Картах оценки выше, чем на Отзовике, и средняя компании зависит от того, откуда её отзывы. Серым — меньше 3 отзывов</p>
+    <div class="tbl-wrap"><table><thead><tr><th>Площадка</th>${CO.map(c=>`<th class="r"${mark(c)}>${esc(c)}</th>`).join('')}</tr></thead><tbody>${plats.map(p=>`<tr><td>${esc(p)}</td>${CO.map(co=>platCell(p,co)).join('')}</tr>`).join('')}</tbody></table></div></div>
+   ${themes}
+   <div class="grid g-2">${ratingTbl}${monthTbl}</div>
+   <p class="muted" style="font-size:12px">Данные на ${esc(COMP.generated||'')}. Это выборка, а не все отзывы о компаниях; при меньше ${COMP_MIN} отзывах за период выводы делать рано. Звёзды отзывов в NPS не пересчитываются.</p>
+  </div>`;
+}
+
+/* ---------- shared blocks ---------- */
+// карточка: цифра + отклонение от базы; ниже зона и «к флоту: 88»; серым — число ответов
+const nfmt=n=>n==null?'—':new Intl.NumberFormat('ru-RU').format(n);
+const npl=(n,a,b,c)=>{const x=Math.abs(n)%100,y=x%10;return x>10&&x<20?c:y===1?a:y>=2&&y<=4?b:c};
+function kpiNps(title,a,ref,refLbl){const has=a.nps!=null;return`<div class="panel kpi"><div class="lbl">${title}</div><div class="val">${has?a.nps:'—'}${has&&ref!=null?`<small>${delta(a.nps,ref)}</small>`:''}</div><div class="foot">${pill(a.nps,a.n)}${ref!=null?`<span>${refLbl}: ${ref}</span>`:''}</div><div class="foot"><span class="muted">${has?`из 100 · ${nfmt(a.n)} ${npl(a.n,'ответ','ответа','ответов')}`:'нет ответов'}</span></div></div>`}
+function kpiPnd(a){if(!a.n)return`<div class="panel kpi"><div class="lbl">Структура ответов</div><div class="val">0<small>ответов</small></div><div class="foot muted">Нет ответов</div></div>`;return`<div class="panel kpi"><div class="lbl">Структура ответов</div><div class="val">${a.n}<small>ответов</small></div>${pnd(a,12)}<div class="pnd-leg"><span class="p">Сторонники ${Math.round(a.P/a.n*100)}%</span><span class="n">Нейтр. ${Math.round(a.N/a.n*100)}%</span><span class="d">Критики ${Math.round(a.D/a.n*100)}%</span></div></div>`}
+function kpiPlain(title,val,unit,foot){const f=String(foot).split(' · ');return`<div class="panel kpi"><div class="lbl">${title}</div><div class="val">${val}${unit?`<small>${unit}</small>`:''}</div><div class="foot"><span>${f[0]}</span></div>${f.length>1?`<div class="foot"><span class="muted">${f.slice(1).join(' · ')}</span></div>`:''}</div>`}
+/* Пункты анкеты: без базы сравнения (сводка по флоту) — лучшие и худшие по индексу;
+   с базой (флот для теплохода и маршрута, теплоход для рейса) — где сильнее и где слабее базы, по разнице.
+   Разница — из количеств ответов, до округления (heatDiff); меньше MIN_N ответов не берём. */
+function zoneLists(A,ref,refName='флот'){
+  const items=A.map((a,k)=>({k,...a})).filter(x=>x.k>0&&x.n>=MIN_N);
+  if(!ref){
+    const best=[...items].sort((a,b)=>b.nps-a.nps).slice(0,5),worst=[...items].sort((a,b)=>a.nps-b.nps).slice(0,5);
+    const li=x=>`<li data-tip="<b>${esc(SHORT[x.k])}</b><br>Индекс ${x.nps} · ${x.n} отв.<br>Сторонники ${x.P} · нейтр. ${x.N} · критики ${x.D}"><span>${SHORT[x.k]}</span><div class="bar"><i style="width:${Math.max(0,x.nps)}%;background:${ZC[zone(x.nps,x.n)]}"></i></div><span class="num">${x.nps}</span><span></span></li>`;
+    return`<div class="panel"><h2>Сильные стороны флота</h2><p class="sub">Пункты анкеты с самым высоким индексом по всем теплоходам</p><ul class="zone-list">${best.map(li).join('')}</ul></div>
+  <div class="panel"><h2>Слабые стороны флота</h2><p class="sub">Самый низкий индекс по всем теплоходам — общие для компании проблемы</p><ul class="zone-list">${worst.map(li).join('')}</ul></div>`}
+  const withD=items.map(x=>({...x,d:heatDiff(x,ref[x.k]),f:ref[x.k].nps})).filter(x=>x.d!=null);
+  const up=withD.filter(x=>Math.round(x.d)>=3).sort((a,b)=>b.d-a.d).slice(0,5),dn=withD.filter(x=>Math.round(x.d)<=-3).sort((a,b)=>a.d-b.d).slice(0,5);
+  // полоса разницы от нуля: вправо — выше базы (зелёная), влево — ниже (красная); полная длина — 20 пунктов
+  const li=x=>{const w=Math.min(50,Math.abs(x.d)/20*50);
+    return`<li class="dz" data-tip="<b>${esc(SHORT[x.k])}</b><br>Индекс ${x.nps} · ${x.n} отв.<br>${refName[0].toUpperCase()+refName.slice(1)}: ${x.f} · разница ${heatSigned(x.d)}<br>Критики ${x.D} из ${x.n}"><span>${SHORT[x.k]}</span>
+      <div class="dbar"><i class="${x.d<0?'n':'p'}" style="width:${w}%"></i></div><span class="num" style="color:${ZC[zone(x.nps,x.n)]}">${x.nps}</span><span class="muted vs">${refName} ${x.f}</span><span class="delta ${x.d<0?'dn':'up'}">${heatSigned(x.d)}</span></li>`};
+  const empty=t=>`<p class="muted" style="margin:4px 0 0">${t}</p>`;
+  return`<div class="panel"><h2>Сильнее, чем ${refName}</h2><p class="sub">Пункты, где индекс выше, чем ${refName==='флот'?'по флоту':'у '+refName}, — на сколько пунктов</p>${up.length?`<ul class="zone-list">${up.map(li).join('')}</ul>`:empty(`Нет пунктов выше на 3 и более — всё на уровне (${refName==='флот'?'флота':refName}).`)}</div>
+  <div class="panel"><h2>Слабее, чем ${refName}</h2><p class="sub">Пункты, где индекс ниже — отсюда и отставание; кандидаты на разбор</p>${dn.length?`<ul class="zone-list">${dn.map(li).join('')}</ul>`:empty(`Нет пунктов ниже на 3 и более — отставания нет.`)}</div>`}
+
+/* «Почему теплоходы ниже флота»: по каждому теплоходу, у которого рекомендация ниже флота на 3+:
+   из чего складывается разница (критики и нейтральные против флота), где проседает, где сильнее, худшие рейсы. */
+function whyLagging(){
+  const F=FLEET[0],fP=F.n?F.D/F.n*100:0,fN=F.n?F.N/F.n*100:0,pc=v=>v.toFixed(1).replace('.',',')+'%';
+  const rows=ships.map(s=>{const L=trips.filter(t=>t.ship===s),A=agg(L),d=heatDiff(A[0],F);return{s,L,A,d}})
+    .filter(r=>r.d!=null&&Math.round(r.d)<=-3&&r.A[0].n>=MIN_N).sort((a,b)=>a.d-b.d);
+  if(!rows.length)return'';
+  const card=r=>{const a=r.A[0],cr=a.D/a.n*100,nu=a.N/a.n*100;
+    const gaps=r.A.map((x,k)=>({k,x,d:heatDiff(x,FLEET[k])})).filter(g=>g.k&&g.x.n>=MIN_N&&g.d!=null);
+    const dn=gaps.filter(g=>Math.round(g.d)<=-3).sort((a,b)=>a.d-b.d).slice(0,4),up=gaps.filter(g=>Math.round(g.d)>=3).sort((a,b)=>b.d-a.d).slice(0,2);
+    const bad=r.L.filter(t=>t.d0&&nOf(t.m[0])>=MIN_N).map(t=>({t,a:agg([t])[0]})).filter(x=>x.a.nps<F.nps-5).sort((x,y)=>x.a.nps-y.a.nps).slice(0,3);
+    // обе группы тянут NPS вниз: критики (0–6) вычитаются, нейтральные (7–8) не добавляют; сначала — та, что отличается от флота сильнее
+    const pC=`критиков (0–6) ${pc(cr)} — по флоту ${pc(fP)}`,pN=`нейтральных (7–8) ${pc(nu)} — по флоту ${pc(fN)}`;
+    const why=(cr-fP>=nu-fN?[pC,pN]:[pN,pC]).join('; ');
+    return`<div class="why-card"><div class="why-head"><button type="button" class="btn ship-btn" data-ship="${esc(r.s)}">${esc(r.s)} ›</button>
+      <span class="why-nps"><b style="color:${ZC[zone(a.nps,a.n)]}">${a.nps}</b> <span class="muted">флот ${F.nps}</span> <span class="delta dn">${heatSigned(r.d)}</span></span></div>
+      <p class="why-line"><span class="why-lbl">Почему ниже</span>${why} · ${a.n} анкет</p>
+      <p class="why-line"><span class="why-lbl">Где проседает</span>${dn.length?dn.map(g=>`<span class="chip bad">${SHORT[g.k]} ${heatSigned(g.d)}</span>`).join(''):'<span class="muted">по отдельным пунктам на уровне флота</span>'}</p>
+      ${up.length?`<p class="why-line"><span class="why-lbl">Сильнее флота</span>${up.map(g=>`<span class="chip good">${SHORT[g.k]} ${heatSigned(g.d)}</span>`).join('')}</p>`:''}
+      ${bad.length?`<p class="why-line"><span class="why-lbl">Провальные рейсы</span>${bad.map(x=>`<button type="button" class="chip trip-chip" data-trip="${x.t.id}">${fmtD(x.t.dep)}–${fmtD(x.t.arr)} · NPS ${x.a.nps}</button>`).join('')}</p>`:''}</div>`};
+  return`<div class="panel"><h2>Почему теплоходы ниже флота</h2><p class="sub">Теплоходы, у которых рекомендация ниже флота на 3+ пункта: из чего складывается разница и какие пункты анкеты её дают. Разница — в пунктах индекса</p>
+  <div class="why-grid">${rows.map(card).join('')}</div></div>`}
+
+function shipBars(){
+  const rows=ships.map(s=>{const A=agg(trips.filter(t=>t.ship===s)),a=A[0];
+    const dn=A.map((x,k)=>({k,x,d:heatDiff(x,FLEET[k])})).filter(g=>g.k&&g.x.n>=MIN_N&&g.d!=null&&Math.round(g.d)<=-3).sort((p,q)=>p.d-q.d).slice(0,3);
+    return{s,...a,why:dn.length?'<br>Ниже флота: '+dn.map(g=>SHORT[g.k]+' '+heatSigned(g.d)).join(', '):''}}).sort((a,b)=>byNpsDesc(a.nps,b.nps));
+  const lo=Math.min(0,...rows.map(r=>r.nps??0));                // NPS бывает отрицательным: шкала от min(0, минимум) до 100
+  const W=560,rowH=30,L=150,R=40,H=rows.length*rowH+24,x=v=>L+(W-L-R)*(Math.max(lo,v??lo)-lo)/(100-lo),f=FLEET[0].nps;
+  return`<div class="panel"><h2>NPS «Рекомендуете Созвездие» по теплоходам</h2><p class="sub">Пунктир — среднее по флоту (${f}). Нажмите на теплоход, чтобы открыть его отчёт</p>
+  <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="NPS по теплоходам">
+  ${[lo,0,25,50,75,100].filter((v,i,a)=>a.indexOf(v)===i).map(v=>`<line class="grid-l" x1="${x(v)}" x2="${x(v)}" y1="0" y2="${H-18}"/><text x="${x(v)}" y="${H-4}" text-anchor="middle">${v}</text>`).join('')}
+  ${rows.map((r,i)=>`<g style="cursor:pointer" data-ship="${esc(r.s)}" data-tip="<b>${esc(r.s)}</b><br>${r.nps==null?'нет ответов':`NPS ${r.nps} · ${r.n} ответов<br>Критиков: ${r.D} (${r.n?(r.D/r.n*100).toFixed(1).replace('.',','):0}%)${r.why}`}"><rect x="0" y="${i*rowH}" width="${W}" height="${rowH}" fill="transparent"/><text x="${L-10}" y="${i*rowH+19}" text-anchor="end" style="fill:var(--ink);font-size:12.5px">${esc(r.s.length>22?r.s.slice(0,21)+'…':r.s)}</text><rect x="${Math.min(x(0),x(r.nps))}" y="${i*rowH+8}" width="${r.nps==null?0:Math.abs(x(r.nps)-x(0))}" height="14" rx="4" fill="${ZC[zone(r.nps,r.n)]}"/><text x="${Math.max(x(0),x(r.nps))+6}" y="${i*rowH+19.5}" style="fill:var(--ink);font-weight:600">${r.nps??'—'}</text></g>`).join('')}
+  <line x1="${x(f)}" x2="${x(f)}" y1="0" y2="${H-18}" stroke="var(--ink)" stroke-dasharray="3 3" stroke-width="1.5"/>
+  </svg></div>`}
+
+function trendChart(list,title,sub){
+  const pts=list.filter(t=>t.d0&&nOf(t.m[0])>0).map(t=>({t,a:{P:t.m[0][0],N:t.m[0][1],D:t.m[0][2],n:t.m[0][0]+t.m[0][1]+t.m[0][2]}})).map(o=>({...o,nps:Math.round((o.a.P-o.a.D)/o.a.n*100)})).sort((a,b)=>a.t.d0-b.t.d0);
+  if(!pts.length)return`<div class="panel"><h2>${title}</h2><p class="muted">Нет рейсов с датой и ответами.</p></div>`;
+  const W=620,H=250,L=34,R=14,T=12,B=28;const t0=+pts[0].t.d0,t1=+pts[pts.length-1].t.d0||t0+1;
+  const lo=Math.min(40,...pts.map(p=>p.nps))-5;const x=d=>L+(W-L-R)*((+d-t0)/((t1-t0)||1)),y=v=>T+(H-T-B)*(1-(v-lo)/(100-lo));
+  // weekly fleet line
+  const wk={};pts.forEach(p=>{const k=Math.floor((+p.t.d0-t0)/(7*864e5));(wk[k]=wk[k]||{P:0,D:0,n:0,d:[]});wk[k].P+=p.a.P;wk[k].D+=p.a.D;wk[k].n+=p.a.n;wk[k].d.push(+p.t.d0)});
+  const line=Object.keys(wk).sort((a,b)=>a-b).map(k=>{const w=wk[k];return[w.d.reduce((a,b)=>a+b)/w.d.length,Math.round((w.P-w.D)/w.n*100)]});
+  const ticks=[];for(let d=new Date(t0);+d<=t1;d.setDate(d.getDate()+7))ticks.push(new Date(d));
+  const yt=[0,50,70,85,100].filter(v=>v>lo);
+  return`<div class="panel"><h2>${title}</h2><p class="sub">${sub}</p>
+  <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(title)}">
+  <rect x="${L}" y="${y(100)}" width="${W-L-R}" height="${y(85)-y(100)}" fill="var(--good-soft)" opacity=".6"/>
+  <rect x="${L}" y="${y(70)}" width="${W-L-R}" height="${y(lo)-y(70)}" fill="var(--bad-soft)" opacity=".6"/>
+  ${yt.map(v=>`<line class="grid-l" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`).join('')}
+  ${ticks.map(d=>`<text x="${x(d)}" y="${H-8}" text-anchor="middle">${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}</text>`).join('')}
+  ${line.length>1?`<polyline points="${line.map(([d,v])=>`${x(d)},${y(v)}`).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>`:''}
+  ${pts.map(p=>`<circle cx="${x(p.t.d0)}" cy="${y(p.nps)}" r="${Math.max(4,Math.min(10,Math.sqrt(p.a.n)))}" fill="${ZC[zone(p.nps,p.a.n)]}" stroke="var(--surface)" stroke-width="2" style="cursor:pointer" data-trip="${p.t.id}" data-tip="<b>${esc(p.t.ship)}</b><br>${esc(tripLabel(p.t))}<br>NPS ${p.nps} · ${p.a.n} отв. · критиков ${p.a.D}"/>`).join('')}
+  </svg><div class="pnd-leg"><span style="color:var(--accent)">— NPS флота по неделям</span><span class="muted">● рейс (размер — число анкет)</span></div></div>`}
+
+/* «Что проседает по теплоходам»: пункт анкеты × теплоход.
+   Режим «Разница с флотом» — в клетке на сколько пунктов индекс теплохода выше/ниже флота (считается из количеств ответов,
+   до округления индексов; показывается целым). Режим «Оценки» — сами индексы с зонами 85+ / 70–84 / <70.
+   «Флот» — общий индекс всех теплоходов по этому пункту. Меньше MIN_N ответов — серым, без выводов. */
+function heatIdx(a){return a.n?100*(a.P-a.D)/a.n:null}
+function heatDiff(a,f){return a.n&&f.n?heatIdx(a)-heatIdx(f):null}
+function heatSigned(d){if(d==null)return'—';const r=Math.round(d);return r>0?'+'+r:r<0?'−'+Math.abs(r):'0'}
+// оттенок разницы: 5 ступеней — на 10+ ниже, на 3–9 ниже, как флот (±2), на 3–9 выше, на 10+ выше
+function heatBand(d){const r=Math.round(d);return r<=-10?'dn2':r<=-3?'dn1':r>=10?'up2':r>=3?'up1':'eq'}
+function heatmap(){
+  const dev=S.heat!=='abs',cols=ships.map(s=>({s,A:agg(trips.filter(t=>t.ship===s))}));
+  const leg=dev
+    ?`<span class="hl dn2">на 10+ ниже</span><span class="hl dn1">на 3–9 ниже</span><span class="hl eq">как флот ±2</span><span class="hl up1">на 3–9 выше</span><span class="hl up2">на 10+ выше</span><span class="hl low">мало ответов</span>`
+    :`<span class="hl good">85+</span><span class="hl warn">70–84</span><span class="hl bad">ниже 70</span><span class="hl low">мало ответов</span>`;
+  let body='';
+  GROUPS.forEach(([g,a,b])=>{body+=`<tr class="grp"><th colspan="${cols.length+2}" scope="colgroup"><span>${g}</span></th></tr>`;
+    for(let k=a;k<=b;k++){
+      const f=FLEET[k];
+      body+=`<tr><th scope="row" class="rowh">${SHORT[k]}</th><td class="fleet">${f.nps??'—'}</td>${cols.map(c=>{
+        const x=c.A[k],d=heatDiff(x,f),low=!x.n||x.n<MIN_N;
+        const cls=low?'low':dev?heatBand(d):zone(x.nps,x.n);
+        const tip=`<b>${esc(c.s)}</b> · ${SHORT[k]}<br>Индекс ${x.nps??'—'} · ${x.n} отв.<br>Флот ${f.nps??'—'} · разница ${heatSigned(d)}${low?'<br>Мало ответов — выводы делать рано':''}`;
+        return`<td class="hc ${cls}"><button type="button" data-heat-tip data-tip="${tip}" aria-label="${esc(c.s)}, ${SHORT[k]}: индекс ${x.nps??'нет'}, флот ${f.nps??'нет'}, разница ${heatSigned(d)}, ответов ${x.n}">${x.n?(dev?heatSigned(d):x.nps):'—'}</button></td>`}).join('')}</tr>`}});
+  return`<div class="panel heat-panel"><div class="ph-head"><div><h2>Что проседает по теплоходам</h2><p class="sub">${dev?'В клетке — на сколько пунктов теплоход выше (+) или ниже (−) флота по этому пункту анкеты':'В клетке — индекс пункта анкеты по формуле NPS'}</p></div>
+  <div class="seg" role="group" aria-label="Что показывать"><button data-heat="dev" aria-pressed="${dev}">Разница с флотом</button><button data-heat="abs" aria-pressed="${!dev}">Оценки</button></div></div>
+  <div class="heat-leg">${leg}</div>
+  <details class="heat-help"><summary>Как читать</summary><ul><li><b>Флот</b> — общий индекс всех ${ships.length} теплоходов по пункту. Теплоходы с большим числом ответов влияют на него сильнее.</li><li>Красная клетка только у одного теплохода — по этому пункту он отстаёт от остальных.</li><li>Строка жёлтая или красная у всех теплоходов в режиме «Оценки» — пункт оценивают ниже по всей компании.</li><li>Разница с флотом считается по точным значениям. Поэтому она может отличаться на 1 от разницы округлённых чисел в режиме «Оценки».</li><li>Нажмите на клетку, чтобы увидеть индекс теплохода, индекс флота и число ответов.</li></ul></details>
+  <div class="tbl-wrap tw-x"><table class="heat"><thead><tr><th class="rowh" scope="col">Пункт анкеты</th><th scope="col" class="fleet">Флот</th>${cols.map(c=>`<th scope="col"><a href="#ship" class="ship-btn" data-ship="${esc(c.s)}" title="Открыть отчёт теплохода">${esc(c.s)}</a></th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div></div>`}
+
+function alerts(){
+  const out=[];
+  trips.forEach(t=>{const m=t.m[0];if(!m)return;const n=m[0]+m[1]+m[2];const v=Math.round((m[0]-m[2])/n*100);if(n>=MIN_N&&v<75)out.push({sev:v<70?2:1,w:FLEET[0].nps-v,html:`<b>${esc(t.ship)}</b>, рейс ${esc(tripLabel(t))}: NPS рекомендации <b>${v}</b> при среднем ${FLEET[0].nps}`,meta:`${n} ответов · критиков ${m[2]}`,trip:t.id})});
+  ships.forEach(s=>{const A=agg(trips.filter(t=>t.ship===s));A.forEach((a,k)=>{if(k&&a.n>=15&&a.nps!=null&&a.nps<=FLEET[k].nps-12)out.push({sev:a.nps<70?2:1,w:FLEET[k].nps-a.nps,html:`<b>${esc(s)}</b>: «${SHORT[k]}» — NPS <b>${a.nps}</b>, на ${FLEET[k].nps-a.nps} ниже флота`,meta:`${a.n} ответов за сезон`,ship:s})})});
+  out.sort((a,b)=>b.sev-a.sev||b.w-a.w);
+  return`<div class="panel" id="sum-alerts"><h2>Требует внимания</h2><p class="sub">Собрано автоматически: рейсы с NPS ниже 75 и пункты, где теплоход отстаёт от флота на 12+ пунктов</p><ul class="alerts">${out.slice(0,9).map(o=>`<li class="${o.sev===2?'bad':'warn'}" style="cursor:pointer" ${o.trip!=null?`data-trip="${o.trip}"`:`data-ship="${esc(o.ship)}"`}><div>${o.html}<div class="meta">${o.meta}</div></div></li>`).join('')}</ul></div>`}
+
+function bindNav(root){root.onclick=e=>{const cell=e.target.closest('[data-heat-tip]');if(cell){const r=cell.getBoundingClientRect(),z=parseFloat(document.documentElement.style.zoom)||1;showTip({clientX:(r.left+r.width/2)*z,clientY:r.bottom*z},cell.dataset.tip);return}
+  const h=e.target.closest('[data-heat]');if(h){S.heat=h.dataset.heat;save();render();return}
+  const tr=e.target.closest('[data-trip]');if(tr){const t=trips[+tr.dataset.trip];e.preventDefault();go('trip',{ship:t.ship,trip:t.id});return}
+  const sh=e.target.closest('[data-ship]');if(sh){e.preventDefault();go('ship',{ship:sh.dataset.ship});return}
+  const rt=e.target.closest('[data-route]');if(rt){S.route=S.route===rt.dataset.route?'':rt.dataset.route;S.scrollRoute=!!S.route;save();render()}};
+  // строки таблиц открываются и с клавиатуры: Enter / пробел
+  root.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('tr[tabindex]')){e.preventDefault();e.target.click()}}}
+
+/* ---------- views ---------- */
+function vSummary(){
+  $('#filters').innerHTML='';const A=FLEET;
+  const vv=$('#view');
+  vv.innerHTML=`<div class="grid" style="gap:16px">
+   <div class="grid g-kpi">${kpiNps('NPS «Рекомендуете Созвездие»',A[0])}${kpiPnd(A[0])}${kpiNps('Впечатление от круиза',A[1])}${kpiPlain('Отзывов (ID_FB)',fbCount(trips),'',`${DATA.rows.length} анкет · ${trips.length} рейсов · ${ships.length} теплоходов`)}</div>
+   <div class="grid g-2">${shipBars()}${trendChart(trips,'Динамика NPS по рейсам','Каждая точка — рейс по дате отправления; зелёная полоса — зона 85+, красная — ниже 70')}</div>
+   ${whyLagging()}
+   <div class="grid g-2">${zoneLists(A)}</div>
+   ${heatmap()}${alerts()}</div>`;
+  bindNav(vv);
+}
+
+function dataQuality(){
+  const W=DATA.warnings||[];if(!W.length)return'';
+  const lv={bad:0,warn:1,info:2};
+  return`<details class="panel dq"><summary>Качество данных · ${W.length}</summary><p class="sub" style="margin-top:6px">Что поправить в таблице, чтобы отчёт был точнее</p><ul>${[...W].sort((a,b)=>lv[a.level]-lv[b.level]).map(w=>`<li class="${w.level}"><span>${esc(w.text)}</span></li>`).join('')}</ul></details>`}
+
+function vShips(){
+  $('#filters').innerHTML='';
+  const rows=ships.map(s=>{const L=trips.filter(t=>t.ship===s),A=agg(L);const it=A.map((a,k)=>({k,...a})).filter(x=>x.k&&x.n>=MIN_N);const best=it.sort((a,b)=>b.nps-a.nps)[0],worst=it[it.length-1];
+    const sp=L.filter(t=>t.d0&&nOf(t.m[0])>0).sort(byDate).map(t=>{const m=t.m[0],n=m[0]+m[1]+m[2];return Math.round((m[0]-m[2])/n*100)});
+    return{s,L,A,best,worst,sp}}).sort((a,b)=>byNpsDesc(a.A[0].nps,b.A[0].nps));
+  const spark=v=>{if(v.length<2)return'';const W=90,H=26,lo=Math.min(50,...v),x=i=>2+i*(W-4)/(v.length-1),y=q=>3+(H-6)*(1-(q-lo)/(100-lo));return`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><polyline points="${v.map((q,i)=>`${x(i)},${y(q)}`).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="1.6"/><circle cx="${x(v.length-1)}" cy="${y(v[v.length-1])}" r="3" fill="${ZC[zone(v[v.length-1],99)]}"/></svg>`};
+  const vv=$('#view');
+  vv.innerHTML=`<div class="grid"><div class="panel"><h2>Сравнение теплоходов</h2><p class="sub">Отсортировано по NPS рекомендации. Строка открывает отчёт по теплоходу</p><div class="tbl-wrap tw-x"><table>
+  <thead><tr><th>Теплоход</th><th class="r">Рейсов</th><th class="r">Ответов</th><th class="r">Отзывов</th><th class="r">NPS</th><th>Зона</th><th class="r">Δ флот</th><th style="min-width:120px">Сторонники / критики</th><th>Сильнее всего</th><th>Слабее всего</th><th>По рейсам</th></tr></thead>
+  <tbody>${rows.map(r=>`<tr class="click" tabindex="0" data-ship="${esc(r.s)}"><td><b>${esc(r.s)}</b></td><td class="r">${r.L.length}</td><td class="r">${r.A[0].n}</td><td class="r">${fbCount(r.L)}</td><td class="r"><b>${r.A[0].nps??'—'}</b></td><td>${pill(r.A[0].nps,r.A[0].n)}</td><td class="r">${delta(r.A[0].nps,FLEET[0].nps)}</td><td>${pnd(r.A[0])}</td><td>${r.best?`<span class="chip">${SHORT[r.best.k]} · ${r.best.nps}</span>`:''}</td><td>${r.worst?`<span class="chip bad">${SHORT[r.worst.k]} · ${r.worst.nps}</span>`:''}</td><td>${spark(r.sp)}</td></tr>`).join('')}</tbody></table></div></div>
+  ${heatmap()}</div>`;
+  bindNav(vv);vv.onkeydown=e=>{if(e.key==='Enter'&&e.target.dataset.ship)go('ship',{ship:e.target.dataset.ship})};
+}
+
+function shipSelect(){return`<label for="f-ship">Теплоход<select id="f-ship">${ships.map(s=>`<option ${s===S.ship?'selected':''}>${esc(s)}</option>`).join('')}</select></label>`}
+
+function profile(A,ref,refLbl){
+  let h='';GROUPS.forEach(([g,a,b])=>{h+=`<div class="grp-h">${g}</div>`;for(let k=a;k<=b;k++){const x=A[k];if(!x.n)continue;
+    h+=`<div class="metric-row" data-tip="<b>${SHORT[k]}</b><br>Сторонники ${x.P} · нейтр. ${x.N} · критики ${x.D}<br>${refLbl}: ${ref[k].nps??'—'}"><span>${SHORT[k]}${x.n<MIN_N?' <span class="muted">·&nbsp;'+x.n+'&nbsp;отв.</span>':''}</span>${pnd(x)}<span class="num" style="color:${ZC[zone(x.nps,x.n)]}">${x.nps}</span>${delta(x.nps,ref[k].nps)}</div>`}});
+  return h}
+
+function waitersTbl(list){
+  const W={};list.forEach(t=>t.w.forEach(([n,s,c])=>{if(!c)return;const k=norm(n).replace(/\s+/g,' ');const o=W[k]||(W[k]={s:0,c:0,names:{}});o.s+=s*c;o.c+=c;o.names[n]=(o.names[n]||0)+c}));
+  const r=Object.values(W).map(o=>({n:Object.entries(o.names).sort((a,b)=>b[1]-a[1])[0][0],avg:o.s/o.c,c:o.c})).sort((a,b)=>b.c-a.c);
+  if(!r.length)return'<p class="muted">Нет данных по официантам</p>';
+  return`<div class="tbl-wrap"><table><thead><tr><th>Официант</th><th class="r">Средняя оценка</th><th class="r">Ответов</th></tr></thead><tbody>${r.map(x=>`<tr><td>${esc(x.n)}</td><td class="r" style="color:${x.avg>=9.5?'var(--good)':x.avg>=8.5?'var(--warn)':'var(--bad)'};font-weight:600">${x.avg.toFixed(1).replace('.',',')}</td><td class="r">${x.c}</td></tr>`).join('')}</tbody></table></div>`}
+
+function vShip(){
+  $('#filters').innerHTML=shipSelect();
+  $('#f-ship').onchange=e=>{S.ship=e.target.value;save();render()};
+  const L=trips.filter(t=>t.ship===S.ship).sort(byDate),A=agg(L);
+  const vv=$('#view');
+  vv.innerHTML=`<div class="grid">
+   <div class="grid g-kpi">${kpiNps('NPS «Рекомендуете Созвездие»',A[0],FLEET[0].nps,'к флоту')}${kpiPnd(A[0])}${kpiNps('Впечатление от теплохода',A[2],FLEET[2].nps,'к флоту')}${kpiPlain('Отзывов (ID_FB)',fbCount(L),'',`${L.reduce((a,t)=>a+t.n,0)} анкет · ${L.length} рейсов · ${new Set(L.filter(t=>t.routeKnown).map(t=>t.route)).size} маршрутов`)}</div>
+   <div class="grid g-2">${zoneLists(A,FLEET)}</div>
+   <div class="grid g-2"><div class="panel"><h2>Профиль теплохода по всем пунктам</h2><p class="sub">Полоса — сторонники / нейтральные / критики; справа — NPS и отклонение от флота</p>${profile(A,FLEET,'Флот')}</div>
+   <div class="grid" style="align-content:start">${trendChart(L,'NPS по рейсам теплохода','Точка — рейс; нажмите, чтобы открыть рейс')}
+   <div class="panel"><h2>Рейсы</h2><p class="sub">Нажмите на строку, чтобы открыть рейс</p><div class="tbl-wrap"><table><thead><tr><th>Даты</th><th>Маршрут</th><th class="r">Отв.</th><th class="r">Отзывов</th><th class="r">NPS</th><th class="r">Δ</th></tr></thead><tbody>${L.map(t=>{const a=agg([t]);return`<tr class="click" data-trip="${t.id}" tabindex="0"><td style="white-space:nowrap">${fmtD(t.dep)}–${fmtD(t.arr)}</td><td>${t.cruise?`<span class="chip">${esc(t.cruise)}</span> `:''}${esc(t.routeShort)}</td><td class="r">${a[0].n}</td><td class="r">${t.fb}</td><td class="r" style="color:${ZC[zone(a[0].nps,a[0].n)]};font-weight:600">${a[0].nps??'—'}</td><td class="r">${delta(a[0].nps,A[0].nps)}</td></tr>`}).join('')}</tbody></table></div></div>
+   <div class="panel"><h2>Официанты</h2><p class="sub">Средневзвешенная оценка за все рейсы</p>${waitersTbl(L)}</div></div></div></div>`;
+  bindNav(vv);
+}
+
+function vCruises(){
+  const R={};trips.forEach(t=>{(R[t.route]=R[t.route]||[]).push(t)});
+  const rows=Object.entries(R).map(([r,L])=>({r,L,A:agg(L)})).sort((a,b)=>(b.A[0].n>=MIN_N)-(a.A[0].n>=MIN_N)||b.A[0].nps-a.A[0].nps);
+  $('#filters').innerHTML=`<label for="f-sort">Сортировка<select id="f-sort"><option value="nps">по NPS рекомендации</option><option value="route" ${S.csort==='route'?'selected':''}>по впечатлению от маршрута</option><option value="n" ${S.csort==='n'?'selected':''}>по числу ответов</option></select></label>`;
+  if(S.csort==='route')rows.sort((a,b)=>(b.A[3].nps??-999)-(a.A[3].nps??-999));if(S.csort==='n')rows.sort((a,b)=>b.A[0].n-a.A[0].n);
+  $('#f-sort').onchange=e=>{S.csort=e.target.value;save();render()};
+  const sel=rows.find(x=>x.r===S.route);
+  const vv=$('#view');
+  const profileHtml=sel?`<div class="grid g-2" id="route-profile"><div class="panel"><div class="ph-head route"><h2>${esc(sel.r)}</h2><button type="button" class="btn" data-route="${esc(sel.r)}">Закрыть</button></div><p class="sub">${sel.L.length} рейс(ов) · ${[...new Set(sel.L.map(t=>t.ship))].map(esc).join(', ')} · Δ к флоту</p>${profile(sel.A,FLEET,'Флот')}</div><div class="grid" style="align-content:start">${zoneLists(sel.A,FLEET)}</div></div>`:'';
+  vv.innerHTML=`<div class="grid">${profileHtml}<div class="panel"><h2>Круизы (маршруты)</h2><p class="sub">Один маршрут может идти на разных теплоходах. Нажмите на строку — над таблицей откроется профиль маршрута</p><div class="tbl-wrap tw-x"><table>
+  <thead><tr><th>Маршрут</th><th>Теплоходы</th><th class="r">Рейсов</th><th class="r">Ответов</th><th class="r">Отзывов</th><th class="r">NPS</th><th>Зона</th><th class="r">Маршрут, NPS</th><th class="r">Экскурсии и программа</th><th style="min-width:110px">Структура</th></tr></thead>
+  <tbody>${rows.map(x=>`<tr class="click" tabindex="0" data-route="${esc(x.r)}" style="${S.route===x.r?'background:var(--accent-soft)':''}"><td title="${esc(x.r)}">${esc(shortRoute(x.r))}</td><td>${[...new Set(x.L.map(t=>t.ship))].map(s=>`<span class="chip">${esc(s)}</span>`).join('')}</td><td class="r">${x.L.length}</td><td class="r">${x.A[0].n}</td><td class="r">${fbCount(x.L)}</td><td class="r"><b>${x.A[0].nps}</b></td><td>${pill(x.A[0].nps,x.A[0].n)}</td><td class="r" style="color:${ZC[zone(x.A[3].nps,x.A[3].n)]};font-weight:600">${x.A[3].nps??'—'}</td><td class="r" style="color:${ZC[zone(x.A[20].nps,x.A[20].n)]};font-weight:600">${x.A[20].nps??'—'}</td><td>${pnd(x.A[0])}</td></tr>`).join('')}</tbody></table></div></div>
+  </div>`;
+  bindNav(vv);
+  if(sel&&S.scrollRoute){S.scrollRoute=false;save();$('#route-profile').scrollIntoView({behavior:'smooth',block:'start'})}
+}
+
+function rowsForTrip(t){return DATA.rows.filter(r=>r[11]===t.id)}
+// Метка анкеты — как tgAnketaId_ в боте: ID_FB или отпечаток (каюта, оценки, начало комментария). По ней кнопка «Открыть анкету» находит строку.
+function anketaId(r){if(r[10])return String(r[10]);const s=String(r[9]||'')+'|'+(r[3]||[]).join(',')+'|'+String(r[5]||'').slice(0,40);let h=5381;for(let i=0;i<s.length;i++)h=((h*33)^s.charCodeAt(i))>>>0;return'h'+h.toString(36)}
+
+function vTrip(){
+  const L=trips.filter(t=>t.ship===S.ship).sort(byDate);
+  if(!L.length){$('#filters').innerHTML=shipSelect();$('#f-ship').onchange=e=>{S.ship=e.target.value;S.trip=null;save();render()};$('#view').innerHTML='<div class="panel"><p class="muted">У этого теплохода нет рейсов с анкетами.</p></div>';return}
+  if(!L.some(t=>t.id===S.trip))S.trip=L[0].id;
+  $('#filters').innerHTML=shipSelect()+`<label for="f-trip">Рейс<select id="f-trip">${L.map(t=>`<option value="${t.id}" ${t.id===S.trip?'selected':''}>${esc(tripLabel(t))}</option>`).join('')}</select></label>`;
+  $('#f-ship').onchange=e=>{S.ship=e.target.value;S.trip=null;save();render()};
+  $('#f-trip').onchange=e=>{S.trip=+e.target.value;save();render()};
+  const t=trips[S.trip],A=agg([t]),SA=agg(L),R=rowsForTrip(t);
+  const quotes=R.filter(r=>r[5]&&r[5].length>12).sort((a,b)=>(a[3][0]??11)-(b[3][0]??11));
+  const crit=R.filter(r=>r[3][0]!=null&&r[3][0]<=6);
+  const vv=$('#view');
+  vv.innerHTML=`<div class="grid">
+   <div class="panel"><div class="trip-head"><h2>${esc(t.ship)}</h2><span>${esc(t.route)}</span></div><p class="sub" style="margin:4px 0 0">${t.cruise?`Круиз ${esc(t.cruise)} · `:''}Отправление ${esc(t.dep)} · прибытие ${esc(t.arr)} · ${t.n} анкет · ${t.fb} отзывов (ID_FB) · лист ${esc(t.sheet)}</p></div>
+   <div class="grid g-kpi">${kpiNps('NPS «Рекомендуете Созвездие»',A[0],SA[0].nps,'к теплоходу')}${kpiPnd(A[0])}${kpiNps('Впечатление от круиза',A[1],SA[1].nps,'к теплоходу')}${kpiNps('Впечатление от маршрута',A[3],FLEET[3].nps,'к флоту')}</div>
+   <div class="grid g-2"><div class="panel"><h2>Все пункты анкеты</h2><p class="sub">Справа — отклонение от среднего по этому теплоходу</p>${profile(A,SA,'Теплоход')}</div>
+   <div class="grid" style="align-content:start">${zoneLists(A,SA,'теплоход')}
+   <div class="panel"><h2>Официанты рейса</h2><p class="sub">По анкетам этого рейса</p>${waitersTbl([t])}</div></div></div>
+   <div class="panel"><h2>Критики рейса <span class="sample">обзвон</span></h2><p class="sub">Анкеты с оценкой рекомендации 0–6; клиент и заявка — у анкет, связанных с заявкой</p>${crit.length?critTable(crit):'<p class="muted">Критиков среди связанных анкет нет — или анкеты рейса ещё не привязаны к заявкам.</p>'}</div>
+   <div class="panel"><h2>Что запомнилось</h2><p class="sub">Свободные ответы пассажиров · сначала — от тех, кто ставит низкие оценки</p>${quotes.length?`<div class="quotes">${quotes.slice(0,12).map(q=>`<div class="quote">${esc(q[5])}<div class="who">${sc(q[3][0])} ${esc(q[7]||'анкета без заявки')}${q[9]?' · каюта '+esc(q[9]):''}</div></div>`).join('')}</div>`:'<p class="muted">Для этого рейса свободные ответы ещё не загружены.</p>'}</div>
+  </div>`;
+  bindNav(vv);
+}
+
+function critTable(list){
+  // На телефоне (≤640px) таблица превращается в карточки: подписи колонок — из data-l.
+  const td=(cls,l,html)=>`<td class="${cls}" data-l="${l}"><div>${html}</div></td>`;
+  return`<div class="tbl-wrap"><table class="stack"><thead><tr><th>Клиент</th><th>Тип</th><th>Заявка</th><th>ID_FB</th><th>Рейс</th><th class="r">Оценка</th><th>Низкие оценки</th><th>Комментарий</th></tr></thead><tbody>${list.map(r=>{const low=r[3].map((v,k)=>v!=null&&v<=6&&k?SHORT[k]:null).filter(Boolean);return`<tr data-aid="${esc(anketaId(r))}">${
+    td('st-title','Клиент',esc(r[6]||'—'))+td('','Тип',esc(r[7]||'—'))+td('','Заявка',esc(r[8]||'—'))+td('nw','ID_FB',esc(r[10]||'—'))+
+    td('nw','Рейс',`${esc(r[0])}<br><span class="muted">${esc(r[1].slice(0,5))}</span>`)+td('r','Оценка',sc(r[3][0]))+
+    td('','Низкие оценки',low.map(x=>`<span class="chip bad">${x}</span>`).join('')||'<span class="muted">—</span>')+
+    (r[5]?td('st-text','Комментарий',esc(r[5])):'<td class="st-text st-empty"></td>')}</tr>`}).join('')}</tbody></table></div>`}
+
+/* Клиенты → «Скачать список»: CSV для Excel («;», UTF-8 с BOM) со всеми клиентами по текущим фильтрам.
+   В Telegram файл присылает бот в чат (из Mini App браузерное скачивание не работает); вне Telegram — обычное скачивание. */
+const CTYPES=['Частное лицо','Агентство','ИП'];
+function clientsCsv(L){
+  const cell=v=>{let s=String(v??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return/[";\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};   // «'» — чтобы Excel не принял текст за формулу
+  const head=['Клиент','Тип','Заявка','ID_FB','Теплоход','Рейс','Маршрут','Бывал раньше','Рекомендация','Низкие оценки (0–6)','Каюта','Официант','Комментарий'];
+  const rows=L.map(r=>{const t=trips[r[11]];return[r[6],r[7],r[8],r[10],r[0],t?`${t.dep}–${t.arr}`:r[1],t&&t.routeKnown?t.route:'',r[2],r[3][0],
+    r[3].map((v,k)=>k&&v!=null&&v<=6?SHORT[k]+' '+v:null).filter(Boolean).join(', '),r[9],r[4],r[5]]});
+  return[head,...rows].map(x=>x.map(cell).join(';')).join('\r\n');
+}
+function downloadClients(L,who){
+  const msg=$('#cl-dl-msg'),btn=$('#cl-dl');
+  const say=(t,bad)=>{msg.hidden=false;msg.style.color=bad?'var(--bad)':'';msg.textContent=t};
+  const d=new Date(),name=`Клиенты_NPS_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.csv`,csv=clientsCsv(L);
+  const caption=`${L.length} ${who}`+(S.ct.length<CTYPES.length?` · тип: ${S.ct.join(', ')}`:'')+(S.q?` · поиск «${S.q}»`:'');
+  TG_INIT.then(i=>SZ_LOGIN||i).then(init=>{
+    if(init&&window.google&&google.script&&google.script.run){btn.disabled=true;say('Готовлю файл…');
+      google.script.run.withSuccessHandler(n=>{btn.disabled=false;say(`Файл «${n}» отправлен вам в чат с ботом.`)})
+        .withFailureHandler(e=>{btn.disabled=false;say('Не удалось отправить файл: '+(e&&e.message||e),true)}).sendClientsCsv(init,csv,caption);return}
+    if(init&&window.SZ_API){btn.disabled=true;say('Готовлю файл…');
+      szApi('csv',{init,csv,caption}).then(t=>{btn.disabled=false;say(`Файл «${JSON.parse(t)}» отправлен вам в чат с ботом.`)},
+        e=>{btn.disabled=false;say('Не удалось отправить файл: '+(e&&e.message||e),true)});return}
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));a.download=name;
+    document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);say(`Файл «${name}» скачан: ${caption}.`)});
+}
+
+function vClients(){
+  if(LC_PART){$('#filters').innerHTML='';$('#view').innerHTML='<div class="loading"><div class="spin"></div>Загружаю список клиентов…</div>';return}
+  const R=DATA.rows.filter(r=>r[3][0]!=null);
+  const npsOf=L=>{const n=L.length;if(!n)return{nps:null,n:0,P:0,N:0,D:0};const P=L.filter(r=>r[3][0]>=9).length,D=L.filter(r=>r[3][0]<=6).length;return{P,D,N:n-P-D,n,nps:Math.round((P-D)/n*100)}};
+  const seg=[['Частные лица',R.filter(r=>r[7]==='Частное лицо')],['Агентства',R.filter(r=>r[7]==='Агентство')],['ИП',R.filter(r=>r[7]==='ИП')],['Бывали раньше (по анкете)',R.filter(r=>r[2]==='Да')],['Первый круиз',R.filter(r=>r[2]==='Нет')],['Без привязки к заявке',R.filter(r=>!r[8])]].map(([l,L])=>({l,...npsOf(L)}));
+  if(!Array.isArray(S.ct))S.ct=CTYPES.slice();
+  $('#filters').innerHTML=`<div class="fgroup"><span class="flbl">Оценка</span><div class="seg" role="group" aria-label="Кого показать"><button data-cf="crit" aria-pressed="${S.cf==='crit'}">Критики 0–6</button><button data-cf="neu" aria-pressed="${S.cf==='neu'}">Нейтральные 7–8</button><button data-cf="pro" aria-pressed="${S.cf==='pro'}">Сторонники 9–10</button><button data-cf="all" aria-pressed="${S.cf==='all'}">Все</button></div></div>
+   <div class="fgroup"><span class="flbl">Тип клиента</span><div class="checks" role="group" aria-label="Тип клиента">${CTYPES.map(c=>`<label><input type="checkbox" data-ct="${esc(c)}"${S.ct.includes(c)?' checked':''}>${esc(c)}</label>`).join('')}</div></div>
+   <label for="f-q" class="grow">Поиск<input type="search" id="f-q" placeholder="ФИО, заявка, теплоход" value="${esc(S.q)}"></label>`;
+  $('#filters').onclick=e=>{const b=e.target.closest('[data-cf]');if(b){S.cf=b.dataset.cf;save();render()}};
+  $('#filters').onchange=e=>{if(!e.target.dataset.ct)return;S.ct=[...$('#filters').querySelectorAll('[data-ct]:checked')].map(x=>x.dataset.ct);save();drawList()};
+  const f={crit:r=>r[3][0]<=6,neu:r=>r[3][0]>=7&&r[3][0]<=8,pro:r=>r[3][0]>=9,all:()=>true}[S.cf];
+  const who=()=>({crit:'критиков (0–6)',neu:'нейтральных (7–8)',pro:'сторонников (9–10)',all:'анкет'}[S.cf]);
+  // все отмечены — показываем и клиентов без типа в заявке; иначе только отмеченные типы
+  const list=()=>{const q=norm(S.q),all=S.ct.length===CTYPES.length;return R.filter(f).filter(r=>r[6]&&(all||S.ct.includes(r[7]))).filter(r=>!q||norm(r.join(' ')).includes(q))};
+  const drawList=()=>{const q=norm(S.q),L=list();
+    const types=S.ct.length===CTYPES.length?'':S.ct.length?' · тип: '+S.ct.map(esc).join(', '):' · не выбран ни один тип клиента';
+    $('#cl-list').innerHTML=`<p class="sub">${L.length} ${who()} с указанным покупателем${types}${q?' · по запросу «'+esc(S.q)+'»':''} · всего с покупателем: ${R.filter(r=>r[6]).length}${L.length>150?' · на странице первые 150, в файле — все':''}</p>`+(L.length?critTable(L.slice(0,150)):'<p class="muted">Никого не нашлось — измените фильтр или поиск.</p>');
+    $('#cl-dl').disabled=!L.length};
+  const W=560,rowH=40,Lw=170,Rw=50,x=v=>Lw+(W-Lw-Rw)*Math.max(0,v)/100;
+  const vv=$('#view');
+  vv.innerHTML=`<div class="grid">
+   <div class="grid g-kpi">${kpiNps('NPS частных лиц',seg[0],seg[1].nps,'к агентствам')}${kpiNps('NPS агентств',seg[1])}${kpiNps('NPS повторных гостей (по анкете)',seg[3],seg[4].nps,'к новичкам')}${kpiPlain('Критиков к обзвону',R.filter(r=>r[3][0]<=6&&r[6]).length,'клиентов','есть ФИО и номер заявки')}</div>
+   <div class="grid g-2"><div class="panel"><h2>NPS по сегментам клиентов</h2><p class="sub">Анкеты, сопоставленные с заявками ACP</p>
+   <svg viewBox="0 0 ${W} ${seg.length*rowH+10}" width="100%" role="img" aria-label="NPS по сегментам">${seg.map((s,i)=>`<g data-tip="<b>${s.l}</b><br>NPS ${s.nps} · ${s.n} анкет<br>Сторонники ${s.P} · критики ${s.D}"><text x="0" y="${i*rowH+17}" style="fill:var(--ink);font-size:12.5px">${s.l}</text><text x="0" y="${i*rowH+31}">${s.n} анкет</text><rect x="${Lw}" y="${i*rowH+10}" width="${x(s.nps)-Lw}" height="14" rx="4" fill="${ZC[zone(s.nps,s.n)]}"/><text x="${x(s.nps)+6}" y="${i*rowH+21.5}" style="fill:var(--ink);font-weight:600">${s.nps}</text></g>`).join('')}</svg></div>
+   <div class="panel"><h2>Что чаще всего ругают критики</h2><p class="sub">Пункты, где клиенты-критики ставят 0–6</p>${(()=>{const C=R.filter(r=>r[3][0]<=6);const cnt=SHORT.map((s,k)=>({s,c:k?C.filter(r=>r[3][k]!=null&&r[3][k]<=6).length:0})).filter(x=>x.c).sort((a,b)=>b.c-a.c).slice(0,7);const mx=cnt[0]?.c||1;return`<ul class="zone-list">${cnt.map(x=>`<li style="grid-template-columns:minmax(110px,1.3fr) 2fr 40px"><span>${x.s}</span><div class="bar"><i style="width:${x.c/mx*100}%;background:var(--bad)"></i></div><span class="num">${x.c}</span></li>`).join('')}</ul><p class="sub" style="margin-top:10px">Из ${C.length} критиков в выборке</p>`})()}</div></div>
+   <div class="panel"><div class="ph-head"><h2>Клиенты по оценке</h2><button type="button" class="btn" id="cl-dl" title="Файл CSV со всеми клиентами по текущим фильтрам">Скачать список</button></div><p class="sub" id="cl-dl-msg" hidden></p><div id="cl-list"></div></div></div>`;
+  drawList();
+  $('#cl-dl').onclick=e=>{if(e.detail)e.currentTarget.blur();downloadClients(list(),who())};
+  $('#f-q').oninput=e=>{S.q=e.target.value;save();drawList()};
+  bindNav(vv);
+}
+
+// Подвал «Как считается»: короткие пункты сеткой (на телефоне — столбиком)
+$('#footnote').innerHTML='<div id="dq-slot"></div><div id="data-slot"></div><h3>Как считается</h3><dl>'+[
+  ['NPS','% сторонников (9–10) − % критиков (0–6). Считается из количества ответов, NPS рейсов не усредняется.'],
+  ['Пункты анкеты','Индекс каждого пункта — по той же формуле, что и NPS.'],
+  ['Какие оценки учитываются','Только целые от 0 до 10. Текст («не пользовались») и ошибочные числа в расчёт не входят — они перечислены в «Качестве данных».'],
+  ['Отзыв','Анкета с заполненным ID_FB.'],
+  ['Откуда данные','Все листы, где есть колонки «Теплоход», «Даты круиза» и «Рекомендуете &quot;Созвездие&quot;». Маршрут и код круиза — из «Справочника по Круизам».'],
+  ['Обновление','Данные хранятся 15 минут. «Обновить данные» перечитывает таблицу, но не чаще раза в минуту.']
+].map(([t,d])=>`<div><dt>${t}</dt><dd>${d}</dd></div>`).join('')+'</dl>';
+/** Узкий экран: название — в одну строку; кнопки — кружки; если не влезает, уменьшаем название. */
+function fitHeader(){
+  const h1=document.querySelector('.brand h1'),ma=document.querySelector('.m-actions'),t=h1&&h1.querySelector('.h1-title');
+  if(!h1||!ma||!t)return;
+  t.style.fontSize='';
+  if(getComputedStyle(ma).display==='none')return;
+  const fits=()=>{const gap=parseFloat(getComputedStyle(h1).columnGap)||12;return t.scrollWidth+gap+ma.getBoundingClientRect().width<=h1.clientWidth+1};
+  ma.classList.remove('fit-short');ma.classList.add('fit-icon');            // на телефоне обновление — кружок, как в «Заявках»
+  if(fits())return;
+  for(let px=parseFloat(getComputedStyle(t).fontSize)-1;px>=17&&!fits();px--)t.style.fontSize=px+'px';   // кнопка уже кружок — уменьшаем название, не мельче 17 px
+}
+addEventListener('resize',fitHeader);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitHeader);
+/** Высота прилипшей строки вкладок — к ней прилипают заголовки таблиц. */
+function navHeight(){const n=document.getElementById('tabs');if(n)document.documentElement.style.setProperty('--nav-h',n.getBoundingClientRect().height+'px')}
+addEventListener('resize',navHeight);
+$('#btn-back').onclick=e=>{if(e.detail)e.currentTarget.blur();goBack()};
+$('#btn-top').onclick=e=>{if(e.detail)e.currentTarget.blur();window.scrollTo({top:0,behavior:'smooth'})};
+addEventListener('scroll',()=>{$('#btn-top').hidden=scrollY<400},{passive:true});
+
+render();
+load(false);
+navState();fitHeader();navHeight();
+window.__szBoot=1;
+</script>
