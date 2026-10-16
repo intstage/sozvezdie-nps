@@ -280,6 +280,36 @@ header.top .legend-zones{grid-area:legend}
 .loading .spin{width:26px;height:26px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);margin:0 auto 12px}
 @media (prefers-reduced-motion:no-preference){.loading .spin{animation:sp 0.9s linear infinite}}
 @keyframes sp{to{transform:rotate(360deg)}}
+/* Заглушка при первом открытии (нет копии на устройстве): силуэт карточек и графика «дышит», подпись меняется */
+.sk i{display:block;border-radius:6px;background:var(--surface2);position:relative;overflow:hidden}
+.sk .sk-l{height:10px;margin:6px 0;width:80%}.sk .sk-v{height:30px;width:45%;margin:12px 0 10px}
+.sk-bars{display:flex;align-items:flex-end;gap:5px;height:150px;margin-top:14px;border-bottom:1px solid var(--line)}
+.sk-bars i{flex:1;border-radius:4px 4px 0 0;background:var(--accent-soft);transform-origin:bottom}
+.sk-msg{color:var(--muted);text-align:center;margin:18px 0 0;min-height:1.4em;transition:opacity .25s}
+@media (max-width:560px){.sk-wrap .g-kpi .sk:nth-child(n+3){display:none}}
+@media (prefers-reduced-motion:no-preference){
+  .sk i:not(.sk-bars i)::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:shim 1.4s ease-in-out infinite}
+  :root[data-theme="dark"] .sk i:not(.sk-bars i)::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+  .sk-bars i{animation:wave 1.3s ease-in-out infinite alternate;animation-delay:calc(var(--n)*-90ms)}
+  /* загрузка и обновление: по полосе бренда бежит блик */
+  body.busy .wrap::before{background:linear-gradient(90deg,transparent,rgba(255,255,255,.85),transparent) 0 0/40% 100% no-repeat,linear-gradient(90deg,var(--navy) 0 60%,var(--aqua) 60% 85%,var(--orange) 85%);animation:stripe 1.1s linear infinite}
+  /* появление вкладки: панели поднимаются, полосы растут от нуля, линии прорисовываются, точки проявляются */
+  .intro .panel{animation:rise .35s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--k,0)*35ms)}
+  .intro svg .bxh{transform-box:fill-box;transform-origin:left;animation:growx .65s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--k,0)*35ms + var(--d,0ms))}
+  .intro svg .ln{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1s ease-out forwards;animation-delay:calc(var(--k,0)*35ms + 150ms)}
+  .intro svg .pop{transform-box:fill-box;transform-origin:center;animation:pop .45s cubic-bezier(.2,.8,.2,1.4) both;animation-delay:calc(var(--k,0)*35ms + var(--d,0ms))}
+  .intro .pnd,.intro .bar i{animation:reveal .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--k,0)*35ms + 120ms)}
+  .kpi .val.upd{animation:upd 1.4s ease}
+}
+@keyframes shim{to{transform:translateX(100%)}}
+@keyframes wave{from{transform:scaleY(.35)}to{transform:scaleY(1)}}
+@keyframes stripe{from{background-position:-67% 0,0 0}to{background-position:167% 0,0 0}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+@keyframes growx{from{transform:scaleX(0)}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes pop{from{transform:scale(0);opacity:0}}
+@keyframes reveal{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes upd{0%,30%{color:var(--accent);text-shadow:0 0 12px var(--accent-soft)}}
 /* переход из уведомления бота: подсветка блока, к которому привела ссылка */
 .flash{animation:flash 2.4s ease-out}tr.flash>td{animation:flashrow 2.4s ease-out}@keyframes flashrow{0%,45%{background:var(--accent-soft)}100%{background:transparent}}@keyframes flash{0%,35%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 3px transparent}}
 .err{background:var(--bad-soft);color:var(--bad);border-radius:10px;padding:14px 16px}
@@ -333,7 +363,7 @@ details.dq li.warn::before{background:var(--warn)}details.dq li.bad::before{back
 
   <nav class="tabs" role="tablist" id="tabs"></nav>
   <div class="filters" id="filters"></div>
-  <main id="view"></main>
+  <main id="view"><div class="sk-wrap" aria-busy="true"><div class="grid g-kpi"><div class="panel kpi sk"><i class="sk-l" style="width:55%"></i><i class="sk-v"></i><i class="sk-l"></i><i class="sk-l" style="width:65%"></i></div><div class="panel kpi sk"><i class="sk-l" style="width:55%"></i><i class="sk-v"></i><i class="sk-l"></i><i class="sk-l" style="width:65%"></i></div><div class="panel kpi sk"><i class="sk-l" style="width:55%"></i><i class="sk-v"></i><i class="sk-l"></i><i class="sk-l" style="width:65%"></i></div><div class="panel kpi sk"><i class="sk-l" style="width:55%"></i><i class="sk-v"></i><i class="sk-l"></i><i class="sk-l" style="width:65%"></i></div></div><div class="panel sk" style="margin-top:16px"><i class="sk-l" style="width:30%;height:14px"></i><div class="sk-bars"><i style="--n:0;height:82%"></i><i style="--n:1;height:76%"></i><i style="--n:2;height:88%"></i><i style="--n:3;height:71%"></i><i style="--n:4;height:79%"></i><i style="--n:5;height:85%"></i><i style="--n:6;height:68%"></i><i style="--n:7;height:90%"></i><i style="--n:8;height:74%"></i><i style="--n:9;height:81%"></i><i style="--n:10;height:77%"></i><i style="--n:11;height:86%"></i><i style="--n:12;height:72%"></i><i style="--n:13;height:84%"></i><i style="--n:14;height:79%"></i><i style="--n:15;height:88%"></i><i style="--n:16;height:70%"></i><i style="--n:17;height:83%"></i><i style="--n:18;height:76%"></i><i style="--n:19;height:87%"></i></div></div><p class="sk-msg" id="sk-msg" role="status">Загружаю анкеты…</p></div></main>
 <script>
 /* Сторож совместимости: если основной скрипт не запустился (старый встроенный браузер Telegram на Android, Windows, Linux),
    вместо вечной «загрузки» показываем, что обновить. Без новых возможностей языка — должен работать везде. */
@@ -453,7 +483,44 @@ function go(tab,patch={}){HIST.push({s:JSON.stringify(S),y:scrollY});if(HIST.len
 function goBack(){const h=HIST.pop();if(!h)return;Object.assign(S,JSON.parse(h.s));save();render();window.scrollTo({top:h.y||0});navState()}
 function navState(){$('#btn-back').hidden=!HIST.length;$('#btn-top').hidden=scrollY<400}
 
+/* Обёртка отрисовки: 1) графики меряются после вставки и при другой ширине перерисовываются (один раз) — подписи 11 px
+   и на телефоне; 2) первая отрисовка вкладки за сеанс — «появление» (.intro), числа карточек считаются от нуля;
+   3) повторная (фильтр, свежие данные, поворот экрана) — без появления, изменившиеся числа переходят от прежних. */
+const CWID={},SEEN={};let RTAB='';
+const MOTION=!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+function chartW(id,def){return CWID[id]||def}
 function render(){
+  const prev=kpiRead(),intro=!!trips.length&&!SEEN[S.tab],same=RTAB===S.tab;
+  renderTab();if(trips.length&&fitCharts())renderTab();
+  if(!trips.length)return;SEEN[S.tab]=1;RTAB=S.tab;const v=$('#view');
+  if(intro&&MOTION){v.classList.add('intro');v.querySelectorAll('.panel').forEach((el,k)=>el.style.setProperty('--k',Math.min(k,6)));
+    clearTimeout(render.t);render.t=setTimeout(()=>v.classList.remove('intro'),2000)}
+  kpiTween(intro?null:same?prev:{},intro);
+}
+function fitCharts(){let ch=false;
+  document.querySelectorAll('#view svg[role="img"][id]').forEach(s=>{const p=s.parentElement,cs=getComputedStyle(p);
+    const w=Math.round((p.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight))/10)*10;
+    if(w>=240&&Math.abs((s.viewBox.baseVal.width||0)-w)>12){CWID[s.id]=w;ch=true}});return ch}
+function kpiEls(){return[...document.querySelectorAll('#view .kpi .val')]}
+function kpiKey(el,i){const l=el.closest('.kpi').querySelector('.lbl');return l?l.textContent.trim():'#'+i}
+function kpiRead(){const m={};kpiEls().forEach((el,i)=>{const t=el.firstChild;if(t&&t.nodeType===3)m[kpiKey(el,i)]=t.nodeValue});return m}
+function kpiParse(s){const m=String(s).match(/^(\D*?)(-?[\d\u00a0\u202f ]*\d(?:,\d+)?)(\D*)$/);if(!m)return null;
+  return{pre:m[1],suf:m[3],v:parseFloat(m[2].replace(/[\u00a0\u202f ]/g,'').replace(',','.')),d:(m[2].split(',')[1]||'').length,g:/[\u00a0\u202f ]/.test(m[2])}}
+function kpiFmt(v,p){const t=Math.abs(v).toFixed(p.d).split('.');const i=p.g?t[0].replace(/\B(?=(\d{3})+$)/g,'\u00a0'):t[0];return(v<0?'-':'')+i+(p.d?','+t[1]:'')}
+/** prev=null — счёт от нуля (появление), иначе от прежнего значения той же карточки; одинаковые не трогаем. */
+function kpiTween(prev,intro){
+  if(!MOTION)return;const t0=performance.now(),dur=intro?900:650,jobs=[];
+  kpiEls().forEach((el,i)=>{const t=el.firstChild;if(!t||t.nodeType!==3)return;const to=kpiParse(t.nodeValue);if(!to||!isFinite(to.v))return;
+    const was=prev?prev[kpiKey(el,i)]:null;if(prev&&(was==null||was===t.nodeValue))return;
+    const from=prev?kpiParse(was):{v:0};if(!from||!isFinite(from.v))return;
+    if(prev)el.classList.add('upd');jobs.push({t,to,from:from.v,end:t.nodeValue})});
+  if(!jobs.length)return;
+  const step=now=>{const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);
+    jobs.forEach(j=>{j.t.nodeValue=k>=1?j.end:j.to.pre+kpiFmt(Math.round((j.from+(j.to.v-j.from)*e)*Math.pow(10,j.to.d))/Math.pow(10,j.to.d),j.to)+j.to.suf});
+    if(k<1)requestAnimationFrame(step)};
+  requestAnimationFrame(step)}
+let rzT=0,rzW=innerWidth;addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(trips.length&&Math.abs(innerWidth-rzW)>30){rzW=innerWidth;render()}},250)});
+function renderTab(){
   $('#tabs').innerHTML=TABS.map(([k,l])=>`<button role="tab" aria-selected="${S.tab===k}" data-tab="${k}">${l}</button>`).join('');
   $('#tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(b&&e.detail)b.blur();if(b&&trips.length)go(b.dataset.tab)};
   hideTip();
@@ -512,13 +579,21 @@ function szApi(fn,args){
     .then(r=>{if(!r.ok)throw new Error('Сервер ответил '+r.status);return r.text()}).then(szErr)}
 function szErr(t){if(t.startsWith('{"__error"'))throw new Error(JSON.parse(t).__error);return t}
 function szPrefetch(init){try{const p=parent!==window&&parent.SZ_PREFETCH;if(p&&p.init===init){parent.SZ_PREFETCH=null;return p.res.then(szErr)}}catch(e){}return null}
+// заглушка первого открытия: подписи меняются, пока данных нет
+const SK_HTML=document.getElementById('view').innerHTML;
+const SK_MSG=['Загружаю анкеты…','Собираю ответы со всех теплоходов…','Считаю NPS по рейсам…','Сверяю анкеты с заявками ACP…'];
+function skRun(k){if(!document.getElementById('sk-msg')||trips.length)return;
+  clearTimeout(skRun.t);skRun.t=setTimeout(()=>{const e=document.getElementById('sk-msg');if(!e||trips.length)return;e.style.opacity=0;
+    setTimeout(()=>{e.textContent=SK_MSG[(k+1)%SK_MSG.length];e.style.opacity=1;skRun(k+1)},250)},1600)}
+skRun(0);
 function load(force){
   const btns=document.querySelectorAll('.js-refresh:not(.js-refresh-m)'),mb=document.querySelector('.js-refresh-m');
   btns.forEach(b=>{b.disabled=true;b.textContent='Обновляю…'});
   if(mb){mb.disabled=true;mb.classList.add('busy');mb.querySelector('.t-full').textContent='Обновляю…';mb.querySelector('.t-short').textContent='Обновляю…'}
-  if(!trips.length)$('#view').innerHTML='<div class="loading"><div class="spin"></div>Загружаю анкеты со всех листов теплоходов…</div>';
+  document.body.classList.add('busy');
+  if(!trips.length&&!document.getElementById('sk-msg')){$('#view').innerHTML=SK_HTML;skRun(0)}
   PUB=null;COMP=null;                         // площадки и конкуренты перечитаются при открытии вкладки
-  const reset=()=>{btns.forEach(b=>{b.disabled=false;b.textContent='Обновить данные'});
+  const reset=()=>{document.body.classList.remove('busy');btns.forEach(b=>{b.disabled=false;b.textContent='Обновить данные'});
     if(mb){mb.disabled=false;mb.classList.remove('busy');mb.querySelector('.t-full').textContent='Обновить данные';mb.querySelector('.t-short').textContent='Обновить'}};
   let fresh=false;   // ответ сервера уже пришёл — копию с устройства не показываем
   const fail=e=>{reset();fresh=true;const a=authMsg(e);
@@ -808,32 +883,34 @@ function shipBars(){
     const dn=A.map((x,k)=>({k,x,d:heatDiff(x,FLEET[k])})).filter(g=>g.k&&g.x.n>=MIN_N&&g.d!=null&&Math.round(g.d)<=-3).sort((p,q)=>p.d-q.d).slice(0,3);
     return{s,...a,why:dn.length?'<br>Ниже флота: '+dn.map(g=>SHORT[g.k]+' '+heatSigned(g.d)).join(', '):''}}).sort((a,b)=>byNpsDesc(a.nps,b.nps));
   const lo=Math.min(0,...rows.map(r=>r.nps??0));                // NPS бывает отрицательным: шкала от min(0, минимум) до 100
-  const W=560,rowH=30,L=150,R=40,H=rows.length*rowH+24,x=v=>L+(W-L-R)*(Math.max(lo,v??lo)-lo)/(100-lo),f=FLEET[0].nps;
+  const W=chartW('c-ships',560),rowH=30,L=W<420?118:150,R=40,H=rows.length*rowH+24,x=v=>L+(W-L-R)*(Math.max(lo,v??lo)-lo)/(100-lo),f=FLEET[0].nps;
   return`<div class="panel"><h2>NPS «Рекомендуете Созвездие» по теплоходам</h2><p class="sub">Пунктир — среднее по флоту (${f}). Нажмите на теплоход, чтобы открыть его отчёт</p>
-  <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="NPS по теплоходам">
+  <svg id="c-ships" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="NPS по теплоходам">
   ${[lo,0,25,50,75,100].filter((v,i,a)=>a.indexOf(v)===i).map(v=>`<line class="grid-l" x1="${x(v)}" x2="${x(v)}" y1="0" y2="${H-18}"/><text x="${x(v)}" y="${H-4}" text-anchor="middle">${v}</text>`).join('')}
-  ${rows.map((r,i)=>`<g style="cursor:pointer" data-ship="${esc(r.s)}" data-tip="<b>${esc(r.s)}</b><br>${r.nps==null?'нет ответов':`NPS ${r.nps} · ${r.n} ответов<br>Критиков: ${r.D} (${r.n?(r.D/r.n*100).toFixed(1).replace('.',','):0}%)${r.why}`}"><rect x="0" y="${i*rowH}" width="${W}" height="${rowH}" fill="transparent"/><text x="${L-10}" y="${i*rowH+19}" text-anchor="end" style="fill:var(--ink);font-size:12.5px">${esc(r.s.length>22?r.s.slice(0,21)+'…':r.s)}</text><rect x="${Math.min(x(0),x(r.nps))}" y="${i*rowH+8}" width="${r.nps==null?0:Math.abs(x(r.nps)-x(0))}" height="14" rx="4" fill="${ZC[zone(r.nps,r.n)]}"/><text x="${Math.max(x(0),x(r.nps))+6}" y="${i*rowH+19.5}" style="fill:var(--ink);font-weight:600">${r.nps??'—'}</text></g>`).join('')}
+  ${rows.map((r,i)=>`<g style="cursor:pointer" data-ship="${esc(r.s)}" data-tip="<b>${esc(r.s)}</b><br>${r.nps==null?'нет ответов':`NPS ${r.nps} · ${r.n} ответов<br>Критиков: ${r.D} (${r.n?(r.D/r.n*100).toFixed(1).replace('.',','):0}%)${r.why}`}"><rect x="0" y="${i*rowH}" width="${W}" height="${rowH}" fill="transparent"/><text x="${L-10}" y="${i*rowH+19}" text-anchor="end" style="fill:var(--ink);font-size:12.5px">${esc(r.s.length>(W<420?14:22)?r.s.slice(0,W<420?13:21)+'…':r.s)}</text><rect class="bxh" style="--d:${i*30}ms" x="${Math.min(x(0),x(r.nps))}" y="${i*rowH+8}" width="${r.nps==null?0:Math.abs(x(r.nps)-x(0))}" height="14" rx="4" fill="${ZC[zone(r.nps,r.n)]}"/><text x="${Math.max(x(0),x(r.nps))+6}" y="${i*rowH+19.5}" style="fill:var(--ink);font-weight:600">${r.nps??'—'}</text></g>`).join('')}
   <line x1="${x(f)}" x2="${x(f)}" y1="0" y2="${H-18}" stroke="var(--ink)" stroke-dasharray="3 3" stroke-width="1.5"/>
   </svg></div>`}
 
 function trendChart(list,title,sub){
   const pts=list.filter(t=>t.d0&&nOf(t.m[0])>0).map(t=>({t,a:{P:t.m[0][0],N:t.m[0][1],D:t.m[0][2],n:t.m[0][0]+t.m[0][1]+t.m[0][2]}})).map(o=>({...o,nps:Math.round((o.a.P-o.a.D)/o.a.n*100)})).sort((a,b)=>a.t.d0-b.t.d0);
   if(!pts.length)return`<div class="panel"><h2>${title}</h2><p class="muted">Нет рейсов с датой и ответами.</p></div>`;
-  const W=620,H=250,L=34,R=14,T=12,B=28;const t0=+pts[0].t.d0,t1=+pts[pts.length-1].t.d0||t0+1;
+  const W=chartW('c-trend',620),H=W<520?220:250,L=34,R=14,T=12,B=28;const t0=+pts[0].t.d0,t1=+pts[pts.length-1].t.d0||t0+1;
   const lo=Math.min(40,...pts.map(p=>p.nps))-5;const x=d=>L+(W-L-R)*((+d-t0)/((t1-t0)||1)),y=v=>T+(H-T-B)*(1-(v-lo)/(100-lo));
   // weekly fleet line
   const wk={};pts.forEach(p=>{const k=Math.floor((+p.t.d0-t0)/(7*864e5));(wk[k]=wk[k]||{P:0,D:0,n:0,d:[]});wk[k].P+=p.a.P;wk[k].D+=p.a.D;wk[k].n+=p.a.n;wk[k].d.push(+p.t.d0)});
   const line=Object.keys(wk).sort((a,b)=>a-b).map(k=>{const w=wk[k];return[w.d.reduce((a,b)=>a+b)/w.d.length,Math.round((w.P-w.D)/w.n*100)]});
   const ticks=[];for(let d=new Date(t0);+d<=t1;d.setDate(d.getDate()+7))ticks.push(new Date(d));
+  const tStep=Math.max(1,Math.ceil(ticks.length*46/(W-L-R)));   // подписи дат не ближе ~46 px
+  for(let i=ticks.length-1;i>=0;i--)if(i%tStep)ticks.splice(i,1);
   const yt=[0,50,70,85,100].filter(v=>v>lo);
   return`<div class="panel"><h2>${title}</h2><p class="sub">${sub}</p>
-  <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(title)}">
+  <svg id="c-trend" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(title)}">
   <rect x="${L}" y="${y(100)}" width="${W-L-R}" height="${y(85)-y(100)}" fill="var(--good-soft)" opacity=".6"/>
   <rect x="${L}" y="${y(70)}" width="${W-L-R}" height="${y(lo)-y(70)}" fill="var(--bad-soft)" opacity=".6"/>
   ${yt.map(v=>`<line class="grid-l" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`).join('')}
   ${ticks.map(d=>`<text x="${x(d)}" y="${H-8}" text-anchor="middle">${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}</text>`).join('')}
-  ${line.length>1?`<polyline points="${line.map(([d,v])=>`${x(d)},${y(v)}`).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>`:''}
-  ${pts.map(p=>`<circle cx="${x(p.t.d0)}" cy="${y(p.nps)}" r="${Math.max(4,Math.min(10,Math.sqrt(p.a.n)))}" fill="${ZC[zone(p.nps,p.a.n)]}" stroke="var(--surface)" stroke-width="2" style="cursor:pointer" data-trip="${p.t.id}" data-tip="<b>${esc(p.t.ship)}</b><br>${esc(tripLabel(p.t))}<br>NPS ${p.nps} · ${p.a.n} отв. · критиков ${p.a.D}"/>`).join('')}
+  ${line.length>1?`<polyline class="ln" pathLength="1" points="${line.map(([d,v])=>`${x(d)},${y(v)}`).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>`:''}
+  ${pts.map((p,i)=>`<circle class="pop" style="--d:${Math.round(i*500/pts.length)}ms" cx="${x(p.t.d0)}" cy="${y(p.nps)}" r="${Math.max(W<520?3:4,Math.min(W<520?7:10,Math.sqrt(p.a.n)*(W<520?.7:1)))}" fill="${ZC[zone(p.nps,p.a.n)]}" stroke="var(--surface)" stroke-width="2" style="cursor:pointer" data-trip="${p.t.id}" data-tip="<b>${esc(p.t.ship)}</b><br>${esc(tripLabel(p.t))}<br>NPS ${p.nps} · ${p.a.n} отв. · критиков ${p.a.D}"/>`).join('')}
   </svg><div class="pnd-leg"><span style="color:var(--accent)">— NPS флота по неделям</span><span class="muted">● рейс (размер — число анкет)</span></div></div>`}
 
 /* «Что проседает по теплоходам»: пункт анкеты × теплоход.
@@ -1038,12 +1115,12 @@ function vClients(){
     const types=S.ct.length===CTYPES.length?'':S.ct.length?' · тип: '+S.ct.map(esc).join(', '):' · не выбран ни один тип клиента';
     $('#cl-list').innerHTML=`<p class="sub">${L.length} ${who()} с указанным покупателем${types}${q?' · по запросу «'+esc(S.q)+'»':''} · всего с покупателем: ${R.filter(r=>r[6]).length}${L.length>150?' · на странице первые 150, в файле — все':''}</p>`+(L.length?critTable(L.slice(0,150)):'<p class="muted">Никого не нашлось — измените фильтр или поиск.</p>');
     $('#cl-dl').disabled=!L.length};
-  const W=560,rowH=40,Lw=170,Rw=50,x=v=>Lw+(W-Lw-Rw)*Math.max(0,v)/100;
+  const W=chartW('c-seg',560),rowH=40,Lw=W<420?130:170,Rw=50,x=v=>Lw+(W-Lw-Rw)*Math.max(0,v)/100;
   const vv=$('#view');
   vv.innerHTML=`<div class="grid">
    <div class="grid g-kpi">${kpiNps('NPS частных лиц',seg[0],seg[1].nps,'к агентствам')}${kpiNps('NPS агентств',seg[1])}${kpiNps('NPS повторных гостей (по анкете)',seg[3],seg[4].nps,'к новичкам')}${kpiPlain('Критиков к обзвону',R.filter(r=>r[3][0]<=6&&r[6]).length,'клиентов','есть ФИО и номер заявки')}</div>
    <div class="grid g-2"><div class="panel"><h2>NPS по сегментам клиентов</h2><p class="sub">Анкеты, сопоставленные с заявками ACP</p>
-   <svg viewBox="0 0 ${W} ${seg.length*rowH+10}" width="100%" role="img" aria-label="NPS по сегментам">${seg.map((s,i)=>`<g data-tip="<b>${s.l}</b><br>NPS ${s.nps} · ${s.n} анкет<br>Сторонники ${s.P} · критики ${s.D}"><text x="0" y="${i*rowH+17}" style="fill:var(--ink);font-size:12.5px">${s.l}</text><text x="0" y="${i*rowH+31}">${s.n} анкет</text><rect x="${Lw}" y="${i*rowH+10}" width="${x(s.nps)-Lw}" height="14" rx="4" fill="${ZC[zone(s.nps,s.n)]}"/><text x="${x(s.nps)+6}" y="${i*rowH+21.5}" style="fill:var(--ink);font-weight:600">${s.nps}</text></g>`).join('')}</svg></div>
+   <svg id="c-seg" viewBox="0 0 ${W} ${seg.length*rowH+10}" width="100%" role="img" aria-label="NPS по сегментам">${seg.map((s,i)=>`<g data-tip="<b>${s.l}</b><br>NPS ${s.nps} · ${s.n} анкет<br>Сторонники ${s.P} · критики ${s.D}"><text x="0" y="${i*rowH+17}" style="fill:var(--ink);font-size:12.5px">${s.l}</text><text x="0" y="${i*rowH+31}">${s.n} анкет</text><rect class="bxh" style="--d:${i*40}ms" x="${Lw}" y="${i*rowH+10}" width="${x(s.nps)-Lw}" height="14" rx="4" fill="${ZC[zone(s.nps,s.n)]}"/><text x="${x(s.nps)+6}" y="${i*rowH+21.5}" style="fill:var(--ink);font-weight:600">${s.nps}</text></g>`).join('')}</svg></div>
    <div class="panel"><h2>Что чаще всего ругают критики</h2><p class="sub">Пункты, где клиенты-критики ставят 0–6</p>${(()=>{const C=R.filter(r=>r[3][0]<=6);const cnt=SHORT.map((s,k)=>({s,c:k?C.filter(r=>r[3][k]!=null&&r[3][k]<=6).length:0})).filter(x=>x.c).sort((a,b)=>b.c-a.c).slice(0,7);const mx=cnt[0]?.c||1;return`<ul class="zone-list">${cnt.map(x=>`<li style="grid-template-columns:minmax(110px,1.3fr) 2fr 40px"><span>${x.s}</span><div class="bar"><i style="width:${x.c/mx*100}%;background:var(--bad)"></i></div><span class="num">${x.c}</span></li>`).join('')}</ul><p class="sub" style="margin-top:10px">Из ${C.length} критиков в выборке</p>`})()}</div></div>
    <div class="panel"><div class="ph-head"><h2>Клиенты по оценке</h2><button type="button" class="btn" id="cl-dl" title="Файл CSV со всеми клиентами по текущим фильтрам">Скачать список</button></div><p class="sub" id="cl-dl-msg" hidden></p><div id="cl-list"></div></div></div>`;
   drawList();
