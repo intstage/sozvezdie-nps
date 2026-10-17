@@ -83,6 +83,9 @@ select,input[type=search]{font:15px var(--body);color:var(--ink);background:var(
 .g-2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
 @media (max-width:420px){.g-2{grid-template-columns:1fr}}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+/* строка-вывод над карточками сводки (У2, ревью 17.10): одна фраза — что происходит */
+.verdict{margin:0 0 16px;padding:12px 16px;border-left:4px solid var(--aqua);background:var(--surface2);border-radius:10px;font-size:15px;line-height:1.45;color:var(--ink)}.verdict b{font-weight:600}
+
 .panel h2{font:600 15px/1.3 var(--display);color:var(--navy);margin:0 0 2px}
 .panel .sub{color:var(--muted);font-size:12.5px;margin:0 0 12px}
 .kpi .lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
@@ -848,7 +851,7 @@ function zoneLists(A,ref,refName='флот'){
     const li=x=>`<li data-tip="<b>${esc(SHORT[x.k])}</b><br>Индекс ${x.nps} · ${x.n} отв.<br>Сторонники ${x.P} · нейтр. ${x.N} · критики ${x.D}"><span>${SHORT[x.k]}</span><div class="bar"><i style="width:${Math.max(0,x.nps)}%;background:${ZC[zone(x.nps,x.n)]}"></i></div><span class="num">${x.nps}</span><span></span></li>`;
     return`<div class="panel"><h2>Сильные стороны флота</h2><p class="sub">Пункты анкеты с самым высоким индексом по всем теплоходам</p><ul class="zone-list">${best.map(li).join('')}</ul></div>
   <div class="panel"><h2>Слабые стороны флота</h2><p class="sub">Самый низкий индекс по всем теплоходам — общие для компании проблемы</p><ul class="zone-list">${worst.map(li).join('')}</ul></div>`}
-  const withD=items.map(x=>({...x,d:heatDiff(x,ref[x.k]),f:ref[x.k].nps})).filter(x=>x.d!=null);
+  const withD=items.map(x=>({...x,d:heatDiff(x,ref[x.k]),f:ref[x.k].nps})).filter(x=>x.d!=null&&heatSig(x,ref[x.k]));
   const up=withD.filter(x=>Math.round(x.d)>=3).sort((a,b)=>b.d-a.d).slice(0,5),dn=withD.filter(x=>Math.round(x.d)<=-3).sort((a,b)=>a.d-b.d).slice(0,5);
   // полоса разницы от нуля: вправо — выше базы (зелёная), влево — ниже (красная); полная длина — 20 пунктов
   const li=x=>{const w=Math.min(50,Math.abs(x.d)/20*50);
@@ -863,10 +866,10 @@ function zoneLists(A,ref,refName='флот'){
 function whyLagging(){
   const F=FLEET[0],fP=F.n?F.D/F.n*100:0,fN=F.n?F.N/F.n*100:0,pc=v=>v.toFixed(1).replace('.',',')+'%';
   const rows=ships.map(s=>{const L=trips.filter(t=>t.ship===s),A=agg(L),d=heatDiff(A[0],F);return{s,L,A,d}})
-    .filter(r=>r.d!=null&&Math.round(r.d)<=-3&&r.A[0].n>=MIN_N).sort((a,b)=>a.d-b.d);
+    .filter(r=>r.d!=null&&Math.round(r.d)<=-3&&r.A[0].n>=MIN_N&&heatSig(r.A[0],F)).sort((a,b)=>a.d-b.d);
   if(!rows.length)return'';
   const card=r=>{const a=r.A[0],cr=a.D/a.n*100,nu=a.N/a.n*100;
-    const gaps=r.A.map((x,k)=>({k,x,d:heatDiff(x,FLEET[k])})).filter(g=>g.k&&g.x.n>=MIN_N&&g.d!=null);
+    const gaps=r.A.map((x,k)=>({k,x,d:heatDiff(x,FLEET[k])})).filter(g=>g.k&&g.x.n>=MIN_N&&g.d!=null&&heatSig(g.x,FLEET[g.k]));
     const dn=gaps.filter(g=>Math.round(g.d)<=-3).sort((a,b)=>a.d-b.d).slice(0,4),up=gaps.filter(g=>Math.round(g.d)>=3).sort((a,b)=>b.d-a.d).slice(0,2);
     const bad=r.L.filter(t=>t.d0&&nOf(t.m[0])>=MIN_N).map(t=>({t,a:agg([t])[0]})).filter(x=>x.a.nps<F.nps-5).sort((x,y)=>x.a.nps-y.a.nps).slice(0,3);
     // обе группы тянут NPS вниз: критики (0–6) вычитаются, нейтральные (7–8) не добавляют; сначала — та, что отличается от флота сильнее
@@ -883,7 +886,7 @@ function whyLagging(){
 
 function shipBars(){
   const rows=ships.map(s=>{const A=agg(trips.filter(t=>t.ship===s)),a=A[0];
-    const dn=A.map((x,k)=>({k,x,d:heatDiff(x,FLEET[k])})).filter(g=>g.k&&g.x.n>=MIN_N&&g.d!=null&&Math.round(g.d)<=-3).sort((p,q)=>p.d-q.d).slice(0,3);
+    const dn=A.map((x,k)=>({k,x,d:heatDiff(x,FLEET[k])})).filter(g=>g.k&&g.x.n>=MIN_N&&g.d!=null&&Math.round(g.d)<=-3&&heatSig(g.x,FLEET[g.k])).sort((p,q)=>p.d-q.d).slice(0,3);
     return{s,...a,why:dn.length?'<br>Ниже флота: '+dn.map(g=>SHORT[g.k]+' '+heatSigned(g.d)).join(', '):''}}).sort((a,b)=>byNpsDesc(a.nps,b.nps));
   const lo=Math.min(0,...rows.map(r=>r.nps??0));                // NPS бывает отрицательным: шкала от min(0, минимум) до 100
   const W=chartW('c-ships',560),rowH=30,L=W<420?118:150,R=40,H=rows.length*rowH+24,x=v=>L+(W-L-R)*(Math.max(lo,v??lo)-lo)/(100-lo),f=FLEET[0].nps;
@@ -922,13 +925,15 @@ function trendChart(list,title,sub){
    «Флот» — общий индекс всех теплоходов по этому пункту. Меньше MIN_N ответов — серым, без выводов. */
 function heatIdx(a){return a.n?100*(a.P-a.D)/a.n:null}
 function heatDiff(a,f){return a.n&&f.n?heatIdx(a)-heatIdx(f):null}
+// разница с флотом не случайна: больше 2 стандартных ошибок NPS теплохода (при 10 ответах ошибка ±30 пунктов) — Т11, ревью 17.10
+function heatSig(a,f){if(!a.n||!f.n)return false;const p=a.P/a.n,q=a.D/a.n,v=Math.max(p+q-(p-q)*(p-q),1/a.n);return Math.abs(heatDiff(a,f))>=2*100*Math.sqrt(v/a.n)}
 function heatSigned(d){if(d==null)return'—';const r=Math.round(d);return r>0?'+'+r:r<0?'−'+Math.abs(r):'0'}
 // оттенок разницы: 5 ступеней — на 10+ ниже, на 3–9 ниже, как флот (±2), на 3–9 выше, на 10+ выше
 function heatBand(d){const r=Math.round(d);return r<=-10?'dn2':r<=-3?'dn1':r>=10?'up2':r>=3?'up1':'eq'}
 function heatmap(){
   const dev=S.heat!=='abs',cols=ships.map(s=>({s,A:agg(trips.filter(t=>t.ship===s))}));
   const leg=dev
-    ?`<span class="hl dn2">на 10+ ниже</span><span class="hl dn1">на 3–9 ниже</span><span class="hl eq">как флот ±2</span><span class="hl up1">на 3–9 выше</span><span class="hl up2">на 10+ выше</span><span class="hl low">мало ответов</span>`
+    ?`<span class="hl dn2">на 10+ ниже</span><span class="hl dn1">на 3–9 ниже</span><span class="hl eq">как флот или разница случайна</span><span class="hl up1">на 3–9 выше</span><span class="hl up2">на 10+ выше</span><span class="hl low">мало ответов</span>`
     :`<span class="hl good">85+</span><span class="hl warn">70–84</span><span class="hl bad">ниже 70</span><span class="hl low">мало ответов</span>`;
   let body='';
   GROUPS.forEach(([g,a,b])=>{body+=`<tr class="grp"><th colspan="${cols.length+2}" scope="colgroup"><span>${g}</span></th></tr>`;
@@ -936,8 +941,8 @@ function heatmap(){
       const f=FLEET[k];
       body+=`<tr><th scope="row" class="rowh">${SHORT[k]}</th><td class="fleet">${f.nps??'—'}</td>${cols.map(c=>{
         const x=c.A[k],d=heatDiff(x,f),low=!x.n||x.n<MIN_N;
-        const cls=low?'low':dev?heatBand(d):zone(x.nps,x.n);
-        const tip=`<b>${esc(c.s)}</b> · ${SHORT[k]}<br>Индекс ${x.nps??'—'} · ${x.n} отв.<br>Флот ${f.nps??'—'} · разница ${heatSigned(d)}${low?'<br>Мало ответов — выводы делать рано':''}`;
+        const sig=!low&&heatSig(x,f),cls=low?'low':dev?(sig?heatBand(d):'eq'):zone(x.nps,x.n);
+        const tip=`<b>${esc(c.s)}</b> · ${SHORT[k]}<br>Индекс ${x.nps??'—'} · ${x.n} отв.<br>Флот ${f.nps??'—'} · разница ${heatSigned(d)}${low?'<br>Мало ответов — выводы делать рано':!sig&&Math.round(d)!==0?'<br>Разница в пределах случайного разброса':''}`;
         return`<td class="hc ${cls}"><button type="button" data-heat-tip data-tip="${tip}" aria-label="${esc(c.s)}, ${SHORT[k]}: индекс ${x.nps??'нет'}, флот ${f.nps??'нет'}, разница ${heatSigned(d)}, ответов ${x.n}">${x.n?(dev?heatSigned(d):x.nps):'—'}</button></td>`}).join('')}</tr>`}});
   return`<div class="panel heat-panel"><div class="ph-head"><div><h2>Что проседает по теплоходам</h2><p class="sub">${dev?'В клетке — на сколько пунктов теплоход выше (+) или ниже (−) флота по этому пункту анкеты':'В клетке — индекс пункта анкеты по формуле NPS'}</p></div>
   <div class="seg" role="group" aria-label="Что показывать"><button data-heat="dev" aria-pressed="${dev}">Разница с флотом</button><button data-heat="abs" aria-pressed="${!dev}">Оценки</button></div></div>
@@ -964,7 +969,11 @@ function bindNav(root){root.onclick=e=>{const cell=e.target.closest('[data-heat-
 function vSummary(){
   $('#filters').innerHTML='';const A=FLEET;
   const vv=$('#view');
-  vv.innerHTML=`<div class="grid" style="gap:16px">
+  // вывод одной фразой: уровень флота и кто заметно (не случайно) отстаёт
+  const lag=ships.map(s=>({s,a:agg(trips.filter(t=>t.ship===s))[0]})).filter(x=>x.a.n>=MIN_N&&Math.round(heatDiff(x.a,A[0]))<=-3&&heatSig(x.a,A[0])).sort((p,q)=>p.a.nps-q.a.nps);
+  const zw=A[0].nps>=85?'сильная зона':A[0].nps>=70?'зона внимания':'проседает';
+  const verdict=`NPS флота <b>${A[0].nps}</b> по ${A[0].n.toLocaleString('ru-RU')} ответам — ${zw}. `+(lag.length?`Заметно ниже флота: ${lag.slice(0,3).map(x=>`<b>${esc(x.s)}</b> (${x.a.nps})`).join(', ')}.`:'Ни один теплоход заметно не отстаёт от флота.');
+  vv.innerHTML=`<div class="grid" style="gap:16px"><p class="verdict" style="margin:0">${verdict}</p>
    <div class="grid g-kpi">${kpiNps('NPS «Рекомендуете Созвездие»',A[0])}${kpiPnd(A[0])}${kpiNps('Впечатление от круиза',A[1])}${kpiPlain('Отзывов (ID_FB)',fbCount(trips),'',`${DATA.rows.length} анкет · ${trips.length} рейсов · ${ships.length} теплоходов`)}</div>
    <div class="grid g-2">${shipBars()}${trendChart(trips,'Динамика NPS по рейсам','Каждая точка — рейс по дате отправления; зелёная полоса — зона 85+, красная — ниже 70')}</div>
    ${whyLagging()}
@@ -1136,6 +1145,7 @@ function vClients(){
 $('#footnote').innerHTML='<div id="dq-slot"></div><div id="data-slot"></div><h3>Как считается</h3><dl>'+[
   ['NPS','Насколько гости готовы советовать нас друзьям: от −100 до +100, чем выше, тем лучше.','% сторонников (9–10) − % критиков (0–6). Считается из количества ответов, NPS рейсов не усредняется.'],
   ['Пункты анкеты','Что именно понравилось или нет: каюта, кухня, экскурсии и т. д.','Индекс каждого пункта — по той же формуле, что и NPS.'],
+  ['Разница с флотом','Отличается ли теплоход от флота по-настоящему, а не случайно.','Клетка подсвечивается, а пункт попадает в «ниже / выше флота», только если разница больше двух стандартных ошибок NPS теплохода (около 95% уверенности). При 10 ответах это примерно ±30 пунктов, при 100 — около ±10.'],
   ['Какие оценки учитываются','Только настоящие оценки 0–10 — ответы словами цифру не искажают.','Только целые от 0 до 10. Текст («не пользовались») и ошибочные числа в расчёт не входят — они перечислены в «Качестве данных».'],
   ['Отзыв','Анкета, у которой есть номер отзыва.','Анкета с заполненным ID_FB.'],
   ['Откуда данные','Из таблицы анкет, которые гости заполняют после рейса.','Все листы, где есть колонки «Теплоход», «Даты круиза» и «Рекомендуете &quot;Созвездие&quot;». Маршрут и код круиза — из «Справочника по Круизам».'],
