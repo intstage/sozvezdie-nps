@@ -422,8 +422,9 @@ function build(P){
     r[2].forEach((v,k)=>{if(v!=null)t.m[k][v>=9?0:v>=7?1:2]++});
     if(r[9])t.fb++;
     const wn=(r[3]||'').trim(),ws=r[2][13];
-    if(wn&&ws!=null){const key=norm(wn).replace(/\s+/g,' ');const o=W[r[0]][key]||(W[r[0]][key]={n:wn,s:0,c:0});o.s+=ws;o.c++}});
-  trips.forEach((t,i)=>{t.w=Object.values(W[i]).map(o=>[o.n,o.s/o.c,o.c])});
+    if(wn&&ws!=null){const key=norm(wn).replace(/\s+/g,' ');const o=W[r[0]][key]||(W[r[0]][key]={n:wn,P:0,N:0,D:0});o[ws>=9?'P':ws>=7?'N':'D']++}});
+  // официант: сторонники / нейтральные / критики по пункту «Работа официанта» — индекс как NPS, а не средний балл (Т7, ревью 17.10)
+  trips.forEach((t,i)=>{t.w=Object.values(W[i]).map(o=>[o.n,o.P,o.N,o.D])});
   ships=P.ships.map(s=>s.name);
   FLEET=agg(trips);
   // строки для «Клиентов»: [теплоход, дата, бывал, оценки, официант, текст, покупатель, тип, заявка, каюта, ID_FB, рейс]
@@ -443,7 +444,8 @@ function zone(v,n){if(v==null||n<MIN_N)return'low';return v>=85?'good':v>=70?'wa
 const ZL={good:'сильная',warn:'внимание',bad:'проседает',low:'мало данных'};
 const ZC={good:'var(--good)',warn:'var(--warn)',bad:'var(--bad)',low:'var(--muted)'};
 function pill(v,n){const z=zone(v,n);return`<span class="pill z-${z}">${ZL[z]}</span>`}
-function delta(a,b){if(a==null||b==null)return'<span class="delta eq">—</span>';const d=a-b;const c=d>=3?'up':d<=-3?'dn':'eq';return`<span class="delta ${c}">${d>0?'+':d<0?'−':'±'}${Math.abs(d)}</span>`}
+// разница индексов — как в остальных отчётах: стрелка и величина в пунктах; нет данных — «нет сравнения» (У4, ревью 17.10)
+function delta(a,b){if(a==null||b==null)return'<span class="delta eq">нет сравнения</span>';const d=a-b;const c=d>=3?'up':d<=-3?'dn':'eq';return`<span class="delta ${c}">${d>0?'▲':d<0?'▼':'='} ${Math.abs(d)} п.</span>`}
 function pnd(a,h=10){if(!a.n)return'<div class="pnd"></div>';const w=x=>(x/a.n*100).toFixed(1)+'%';return`<div class="pnd" style="height:${h}px"><i class="p" style="width:${w(a.P)}"></i><i class="n" style="width:${w(a.N)}"></i><i class="d" style="width:${w(a.D)}"></i></div>`}
 function sc(v){if(v==null)return'<span class="muted">—</span>';const z=v>=9?'good':v>=7?'warn':'bad';return`<span class="score z-${z}">${v}</span>`}
 const tripLabel=t=>`${fmtD(t.dep)}–${fmtD(t.arr)}${t.cruise?' · '+t.cruise:''} · ${t.routeShort}`;
@@ -856,7 +858,7 @@ function zoneLists(A,ref,refName='флот'){
   // полоса разницы от нуля: вправо — выше базы (зелёная), влево — ниже (красная); полная длина — 20 пунктов
   const li=x=>{const w=Math.min(50,Math.abs(x.d)/20*50);
     return`<li class="dz" data-tip="<b>${esc(SHORT[x.k])}</b><br>Индекс ${x.nps} · ${x.n} отв.<br>${refName[0].toUpperCase()+refName.slice(1)}: ${x.f} · разница ${heatSigned(x.d)}<br>Критики ${x.D} из ${x.n}"><span>${SHORT[x.k]}</span>
-      <div class="dbar"><i class="${x.d<0?'n':'p'}" style="width:${w}%"></i></div><span class="num" style="color:${ZC[zone(x.nps,x.n)]}">${x.nps}</span><span class="muted vs">${refName} ${x.f}</span><span class="delta ${x.d<0?'dn':'up'}">${heatSigned(x.d)}</span></li>`};
+      <div class="dbar"><i class="${x.d<0?'n':'p'}" style="width:${w}%"></i></div><span class="num" style="color:${ZC[zone(x.nps,x.n)]}">${x.nps}</span><span class="muted vs">${refName} ${x.f}</span><span class="delta ${x.d<0?'dn':'up'}">${heatArrow(x.d)}</span></li>`};
   const empty=t=>`<p class="muted" style="margin:4px 0 0">${t}</p>`;
   return`<div class="panel"><h2>Сильнее, чем ${refName}</h2><p class="sub">Пункты, где индекс выше, чем ${refName==='флот'?'по флоту':'у '+refName}, — на сколько пунктов</p>${up.length?`<ul class="zone-list">${up.map(li).join('')}</ul>`:empty(`Нет пунктов выше на 3 и более — всё на уровне (${refName==='флот'?'флота':refName}).`)}</div>
   <div class="panel"><h2>Слабее, чем ${refName}</h2><p class="sub">Пункты, где индекс ниже — отсюда и отставание; кандидаты на разбор</p>${dn.length?`<ul class="zone-list">${dn.map(li).join('')}</ul>`:empty(`Нет пунктов ниже на 3 и более — отставания нет.`)}</div>`}
@@ -876,7 +878,7 @@ function whyLagging(){
     const pC=`критиков (0–6) ${pc(cr)} — по флоту ${pc(fP)}`,pN=`нейтральных (7–8) ${pc(nu)} — по флоту ${pc(fN)}`;
     const why=(cr-fP>=nu-fN?[pC,pN]:[pN,pC]).join('; ');
     return`<div class="why-card"><div class="why-head"><button type="button" class="btn ship-btn" data-ship="${esc(r.s)}">${esc(r.s)} ›</button>
-      <span class="why-nps"><b style="color:${ZC[zone(a.nps,a.n)]}">${a.nps}</b> <span class="muted">флот ${F.nps}</span> <span class="delta dn">${heatSigned(r.d)}</span></span></div>
+      <span class="why-nps"><b style="color:${ZC[zone(a.nps,a.n)]}">${a.nps}</b> <span class="muted">флот ${F.nps}</span> <span class="delta dn">${heatArrow(r.d)}</span></span></div>
       <p class="why-line"><span class="why-lbl">Почему ниже</span>${why} · ${a.n} анкет</p>
       <p class="why-line"><span class="why-lbl">Где проседает</span>${dn.length?dn.map(g=>`<span class="chip bad">${SHORT[g.k]} ${heatSigned(g.d)}</span>`).join(''):'<span class="muted">по отдельным пунктам на уровне флота</span>'}</p>
       ${up.length?`<p class="why-line"><span class="why-lbl">Сильнее флота</span>${up.map(g=>`<span class="chip good">${SHORT[g.k]} ${heatSigned(g.d)}</span>`).join('')}</p>`:''}
@@ -927,6 +929,8 @@ function heatIdx(a){return a.n?100*(a.P-a.D)/a.n:null}
 function heatDiff(a,f){return a.n&&f.n?heatIdx(a)-heatIdx(f):null}
 // разница с флотом не случайна: больше 2 стандартных ошибок NPS теплохода (при 10 ответах ошибка ±30 пунктов) — Т11, ревью 17.10
 function heatSig(a,f){if(!a.n||!f.n)return false;const p=a.P/a.n,q=a.D/a.n,v=Math.max(p+q-(p-q)*(p-q),1/a.n);return Math.abs(heatDiff(a,f))>=2*100*Math.sqrt(v/a.n)}
+// подпись разницы в списках — как delta(): стрелка и пункты (У4); в клетках карты и чипах остаётся короткая «+5 / −3»
+function heatArrow(d){if(d==null)return'нет сравнения';const r=Math.round(d);return`${r>0?'▲':r<0?'▼':'='} ${Math.abs(r)} п.`}
 function heatSigned(d){if(d==null)return'—';const r=Math.round(d);return r>0?'+'+r:r<0?'−'+Math.abs(r):'0'}
 // оттенок разницы: 5 ступеней — на 10+ ниже, на 3–9 ниже, как флот (±2), на 3–9 выше, на 10+ выше
 function heatBand(d){const r=Math.round(d);return r<=-10?'dn2':r<=-3?'dn1':r>=10?'up2':r>=3?'up1':'eq'}
@@ -1009,10 +1013,10 @@ function profile(A,ref,refLbl){
   return h}
 
 function waitersTbl(list){
-  const W={};list.forEach(t=>t.w.forEach(([n,s,c])=>{if(!c)return;const k=norm(n).replace(/\s+/g,' ');const o=W[k]||(W[k]={s:0,c:0,names:{}});o.s+=s*c;o.c+=c;o.names[n]=(o.names[n]||0)+c}));
-  const r=Object.values(W).map(o=>({n:Object.entries(o.names).sort((a,b)=>b[1]-a[1])[0][0],avg:o.s/o.c,c:o.c})).sort((a,b)=>b.c-a.c);
+  const W={};list.forEach(t=>t.w.forEach(([n,P,N,D])=>{const c=P+N+D;if(!c)return;const k=norm(n).replace(/\s+/g,' ');const o=W[k]||(W[k]={P:0,N:0,D:0,c:0,names:{}});o.P+=P;o.N+=N;o.D+=D;o.c+=c;o.names[n]=(o.names[n]||0)+c}));
+  const r=Object.values(W).map(o=>({n:Object.entries(o.names).sort((a,b)=>b[1]-a[1])[0][0],idx:Math.round((o.P-o.D)/o.c*100),P:o.P,N:o.N,D:o.D,c:o.c})).sort((a,b)=>b.c-a.c);
   if(!r.length)return'<p class="muted">Нет данных по официантам</p>';
-  return`<div class="tbl-wrap"><table><thead><tr><th>Официант</th><th class="r">Средняя оценка</th><th class="r">Ответов</th></tr></thead><tbody>${r.map(x=>`<tr><td>${esc(x.n)}</td><td class="r" style="color:${x.avg>=9.5?'var(--good)':x.avg>=8.5?'var(--warn)':'var(--bad)'};font-weight:600">${x.avg.toFixed(1).replace('.',',')}</td><td class="r">${x.c}</td></tr>`).join('')}</tbody></table></div>`}
+  return`<div class="tbl-wrap"><table><thead><tr><th>Официант</th><th class="r">Индекс</th><th class="r">Ответов</th></tr></thead><tbody>${r.map(x=>`<tr><td>${esc(x.n)}</td><td class="r" title="Сторонники ${x.P} · нейтр. ${x.N} · критики ${x.D}" style="color:${ZC[zone(x.idx,x.c)]};font-weight:600">${x.idx}${x.c<MIN_N?' <span class="muted" style="font-weight:400">мало ответов</span>':''}</td><td class="r">${x.c}</td></tr>`).join('')}</tbody></table></div>`}
 
 function vShip(){
   $('#filters').innerHTML=shipSelect();
@@ -1025,7 +1029,7 @@ function vShip(){
    <div class="grid g-2"><div class="panel"><h2>Профиль теплохода по всем пунктам</h2><p class="sub">Полоса — сторонники / нейтральные / критики; справа — NPS и отклонение от флота</p>${profile(A,FLEET,'Флот')}</div>
    <div class="grid" style="align-content:start">${trendChart(L,'NPS по рейсам теплохода','Точка — рейс; нажмите, чтобы открыть рейс')}
    <div class="panel"><h2>Рейсы</h2><p class="sub">Нажмите на строку, чтобы открыть рейс</p><div class="tbl-wrap"><table><thead><tr><th>Даты</th><th>Маршрут</th><th class="r">Отв.</th><th class="r">Отзывов</th><th class="r">NPS</th><th class="r">Δ</th></tr></thead><tbody>${L.map(t=>{const a=agg([t]);return`<tr class="click" data-trip="${t.id}" tabindex="0"><td style="white-space:nowrap">${fmtD(t.dep)}–${fmtD(t.arr)}</td><td>${t.cruise?`<span class="chip">${esc(t.cruise)}</span> `:''}${esc(t.routeShort)}</td><td class="r">${a[0].n}</td><td class="r">${t.fb}</td><td class="r" style="color:${ZC[zone(a[0].nps,a[0].n)]};font-weight:600">${a[0].nps??'—'}</td><td class="r">${delta(a[0].nps,A[0].nps)}</td></tr>`}).join('')}</tbody></table></div></div>
-   <div class="panel"><h2>Официанты</h2><p class="sub">Средневзвешенная оценка за все рейсы</p>${waitersTbl(L)}</div></div></div></div>`;
+   <div class="panel"><h2>Официанты</h2><p class="sub">Индекс по пункту «Работа официанта» — как NPS: % оценок 9–10 − % оценок 0–6; меньше 10 ответов — серым</p>${waitersTbl(L)}</div></div></div></div>`;
   bindNav(vv);
 }
 
