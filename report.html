@@ -216,6 +216,7 @@ svg .grid-l{stroke:var(--line);stroke-width:1}
 .note h3{font:600 12px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
 .note dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px 28px;margin:0}
 .note dt{font-weight:600;color:var(--ink2);margin:0 0 2px}.note dd{margin:0}
+.note .how{margin-top:3px;font-size:13px;color:var(--muted)}.note .how summary{cursor:pointer;color:var(--link);font-size:12.5px;width:max-content}.note .how[open] summary{margin-bottom:2px}
 /* подвал, как в отчёте «Заявки Созвездия»: «Качество данных» (карточка, свёрнуто) → «Объём данных» (серая плашка) → «Как считается» */
 .note details.dq{margin:0 0 20px;font-size:14px;line-height:1.45;color:var(--ink2)}
 .note details.dq summary{color:var(--ink)}
@@ -246,7 +247,9 @@ header.top .legend-zones{grid-area:legend}
 .m-only{display:none}
 .nw{white-space:nowrap}
 @media (max-width:760px){
-  .brand h1{flex-wrap:nowrap;justify-content:space-between;gap:12px;min-width:0}.brand h1 .h1-sub{display:none}
+  .brand h1{flex-wrap:wrap;justify-content:space-between;gap:2px 12px;min-width:0}
+  /* фраза-смысл — второй строкой под названием и кнопками (С4, ревью 17.10) */
+  .brand h1 .h1-sub{order:3;flex:1 0 100%;padding:0;border:0;font-size:12.5px;line-height:1.3;white-space:normal}
   .brand h1 .h1-title{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
   .js-refresh-m .t-short,.js-refresh-m .t-icon{display:none}
   .m-actions.fit-short .js-refresh-m .t-full,.m-actions.fit-icon .js-refresh-m .t-full,.m-actions.fit-icon .js-refresh-m .t-short{display:none}
@@ -347,7 +350,7 @@ details.dq li.warn::before{background:var(--warn)}details.dq li.bad::before{back
 <div class="wrap">
   <header class="top">
     <div class="brand">
-      <h1><span class="h1-title">NPS Созвездия</span> <span class="h1-sub">анкеты пассажиров</span><span class="m-actions m-only"><button type="button" class="btn js-refresh js-refresh-m" title="Обновить данные" aria-label="Обновить данные"><span class="t-full">Обновить данные</span><span class="t-short">Обновить</span><svg class="t-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="btn icon-btn js-fs" hidden></button><button type="button" class="btn icon-btn js-theme"></button></span></h1>
+      <h1><span class="h1-title">NPS Созвездия</span> <span class="h1-sub">Что гости говорят о рейсах и кому позвонить сегодня</span><span class="m-actions m-only"><button type="button" class="btn js-refresh js-refresh-m" title="Обновить данные" aria-label="Обновить данные"><span class="t-full">Обновить данные</span><span class="t-short">Обновить</span><svg class="t-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="btn icon-btn js-fs" hidden></button><button type="button" class="btn icon-btn js-theme"></button></span></h1>
       <p id="period">Загружаю анкеты из таблицы…</p>
     </div>
     <div class="top-side">
@@ -1131,13 +1134,13 @@ function vClients(){
 
 // Подвал «Как считается»: короткие пункты сеткой (на телефоне — столбиком)
 $('#footnote').innerHTML='<div id="dq-slot"></div><div id="data-slot"></div><h3>Как считается</h3><dl>'+[
-  ['NPS','% сторонников (9–10) − % критиков (0–6). Считается из количества ответов, NPS рейсов не усредняется.'],
-  ['Пункты анкеты','Индекс каждого пункта — по той же формуле, что и NPS.'],
-  ['Какие оценки учитываются','Только целые от 0 до 10. Текст («не пользовались») и ошибочные числа в расчёт не входят — они перечислены в «Качестве данных».'],
-  ['Отзыв','Анкета с заполненным ID_FB.'],
-  ['Откуда данные','Все листы, где есть колонки «Теплоход», «Даты круиза» и «Рекомендуете &quot;Созвездие&quot;». Маршрут и код круиза — из «Справочника по Круизам».'],
-  ['Обновление','Данные хранятся 15 минут. «Обновить данные» перечитывает таблицу, но не чаще раза в минуту.']
-].map(([t,d])=>`<div><dt>${t}</dt><dd>${d}</dd></div>`).join('')+'</dl>';
+  ['NPS','Насколько гости готовы советовать нас друзьям: от −100 до +100, чем выше, тем лучше.','% сторонников (9–10) − % критиков (0–6). Считается из количества ответов, NPS рейсов не усредняется.'],
+  ['Пункты анкеты','Что именно понравилось или нет: каюта, кухня, экскурсии и т. д.','Индекс каждого пункта — по той же формуле, что и NPS.'],
+  ['Какие оценки учитываются','Только настоящие оценки 0–10 — ответы словами цифру не искажают.','Только целые от 0 до 10. Текст («не пользовались») и ошибочные числа в расчёт не входят — они перечислены в «Качестве данных».'],
+  ['Отзыв','Анкета, у которой есть номер отзыва.','Анкета с заполненным ID_FB.'],
+  ['Откуда данные','Из таблицы анкет, которые гости заполняют после рейса.','Все листы, где есть колонки «Теплоход», «Даты круиза» и «Рекомендуете &quot;Созвездие&quot;». Маршрут и код круиза — из «Справочника по Круизам».'],
+  ['Обновление','Страница перечитывает таблицу каждые 15 минут.','Данные хранятся 15 минут. «Обновить данные» перечитывает таблицу, но не чаще раза в минуту.']
+].map(([t,m,d])=>`<div><dt>${t}</dt><dd>${m}<details class="how"><summary>Как считаем</summary>${d}</details></dd></div>`).join('')+'</dl>';
 /** Узкий экран: название — в одну строку; кнопки — кружки; если не влезает, уменьшаем название. */
 function fitHeader(){
   const h1=document.querySelector('.brand h1'),ma=document.querySelector('.m-actions'),t=h1&&h1.querySelector('.h1-title');
