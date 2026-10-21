@@ -433,6 +433,7 @@ function build(P){
   if(S.trip!=null&&!trips[S.trip])S.trip=null;
   const dated=trips.filter(t=>t.d0);
   const first=dated.reduce((a,t)=>t.d0<a.d0?t:a,dated[0]),last=dated.reduce((a,t)=>t.d1>a.d1?t:a,dated[0]);
+  DATA.span=first?`${fmtD(first.dep)}–${last.arr}`:'';
   // Сводка данных — в подвале, между «Качеством данных» и «Как считается»; перенос строки — только между частями
   $('#data-slot').innerHTML='<p class="ref-info"><b>Объём данных.</b> '+[first?`Рейсы ${fmtD(first.dep)}–${last.arr}`:'',`${ships.length} теплоходов`,`${trips.length} рейсов`,`${P.rows.length} анкет`,`на ${esc(P.generated)}`].filter(Boolean).map(x=>`<span class="nw">${x}</span>`).join(' · ')+'</p>';
   $('#period').hidden=true;
@@ -698,14 +699,16 @@ function vPub(){
   if(!PUB){$('#filters').innerHTML='';vv.innerHTML='<div class="loading"><div class="spin"></div>Загружаю отзывы с площадок…</div>';loadPub();return}
   if(PUB.error){vv.innerHTML=`<div class="err">${PUB.auth||`<b>Не удалось загрузить отзывы с площадок.</b> ${esc(PUB.error)}`}</div>`;return}
   const ALL=PUB.rows;
-  const plats=[...new Set(ALL.map(r=>r[0]))].sort(),years=[...new Set(ALL.map(r=>r[1].slice(0,4)).filter(Boolean))].sort().reverse();
+  const plats=[...new Set(ALL.map(r=>r[0]))].sort();
+  // Период — общий с «Конкурентами» (revPeriod, S.cm); «всё время» здесь — с первого отзыва о Созвездии
+  const RP=revPeriod(ALL.map(r=>r[1]),ALL.map(r=>r[1]).filter(Boolean).sort()[0]);
   const shipList=[...new Set(ALL.flatMap(r=>r[5].split(',').map(x=>x.trim()).filter(Boolean)))].sort();
   const opt=(v,l,cur)=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(l)}</option>`;
   $('#filters').innerHTML=`<label>Площадка<select id="f-pp">${opt('','Все площадки',S.pp)}${plats.map(p=>opt(p,p,S.pp)).join('')}</select></label>
    <label>Теплоход<select id="f-ps">${opt('','Все теплоходы',S.ps)}${shipList.map(p=>opt(p,p,S.ps)).join('')}</select></label>
-   <label>Год<select id="f-py">${opt('','Все годы',S.py)}${years.map(y=>opt(y,y,S.py)).join('')}</select></label>`;
-  $('#filters').onchange=e=>{const k={'f-pp':'pp','f-ps':'ps','f-py':'py'}[e.target.id];if(k){S[k]=e.target.value;save();render()}};
-  const L=ALL.filter(r=>(!S.pp||r[0]===S.pp)&&(!S.ps||r[5].split(',').map(x=>x.trim()).includes(S.ps))&&(!S.py||r[1].startsWith(S.py)));
+   ${RP.html}`;
+  $('#filters').onchange=e=>{const k={'f-pp':'pp','f-ps':'ps','f-cm':'cm'}[e.target.id];if(k){S[k]=e.target.value;save();render()}};
+  const L=ALL.filter(r=>(!S.pp||r[0]===S.pp)&&(!S.ps||r[5].split(',').map(x=>x.trim()).includes(S.ps))&&RP.inP(r[1]));
   const A=pubAgg(L);
   const noRating=L.filter(r=>r[2]==null).length;
 
@@ -731,6 +734,7 @@ function vPub(){
   const untagged=ALL.filter(r=>!TONE[r[4]]).length;
 
   vv.innerHTML=`<div class="grid">
+   <p class="verdict" style="margin:0">Отзывы о «Созвездии» за <b>${RP.lbl}</b>${S.pp?' · '+esc(S.pp):''}${S.ps?' · '+esc(S.ps):''}. Период общий с вкладкой «Конкуренты» — при одном периоде цифры «Созвездия» там те же.</p>
    <div class="grid g-kpi">${kpiPlain('Отзывов на площадках',A.n,'шт.',`${byPlat.length} площад${byPlat.length===1?'ка':byPlat.length<5?'ки':'ок'}${noRating?` · без оценки ${noRating}`:''}`)}
     <div class="panel kpi"><div class="lbl">Средняя оценка</div><div class="val">${A.avg==null?'—':A.avg.toFixed(2).replace('.',',')}<small>из 5</small></div><div class="foot"><span>по ${A.rs.length} отзывам с оценкой</span></div></div>
     <div class="panel kpi"><div class="lbl">Тональность</div><div class="val">${pct(A.P,A.t)}%<small>позитив</small></div>${pndT(A,10)}<div class="pnd-leg"><span class="p">Позитив ${A.P}</span><span class="n">Нейтр. ${A.N}</span><span class="d">Негатив ${A.D}</span></div></div>
@@ -771,6 +775,20 @@ function loadComp(){
   else if(window.COMP_PAYLOAD)setTimeout(()=>done(window.COMP_PAYLOAD),0);
   else fail('Нет данных о конкурентах.');
 }
+// Общий период отзывов для «Площадок» и «Конкурентов» (S.cm): '' — последние 12 месяцев (по умолчанию), 'ГГГГ' — год,
+// 'ГГГГ-ММ' — месяц из последних 12, 'all' — всё время. Считаем по дате отзыва. since — с какой даты «всё время».
+function revPeriod(dates,since){
+  const now=new Date(),curM=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const y12=new Date(now);y12.setFullYear(now.getFullYear()-1);const from12=y12.toISOString().slice(0,10);
+  const months=[...new Set(dates.map(d=>d.slice(0,7)))].filter(Boolean).sort().reverse().filter(m=>m>=from12.slice(0,7));
+  const years=[...new Set(dates.map(d=>d.slice(0,4)))].filter(Boolean).sort().reverse();
+  if(S.cm&&S.cm!=='all'&&!months.includes(S.cm)&&!years.includes(S.cm))S.cm='';
+  const opt=(v,l)=>`<option value="${v}"${v===S.cm?' selected':''}>${l}</option>`;
+  const html=`<label>Период<select id="f-cm">${opt('','Последние 12 месяцев')}<optgroup label="Год">${years.map(y=>opt(y,y+(y===curM.slice(0,4)?' (идёт)':''))).join('')}</optgroup><optgroup label="Месяц">${months.map(m=>opt(m,monthLbl(m)+(m===curM?' (идёт)':''))).join('')}</optgroup>${opt('all','Всё время')}</select></label>`;
+  const inP=d=>S.cm===''?d>=from12:S.cm==='all'?true:String(d).startsWith(S.cm);
+  const lbl=S.cm===''?`последние 12 месяцев (с ${fmtIso(from12)})`:S.cm==='all'?'всё время'+(since?' (с '+fmtIso(since)+')':''):S.cm.length===4?S.cm+' год'+(S.cm===curM.slice(0,4)?' (идёт)':''):monthLbl(S.cm)+(S.cm===curM?' (месяц ещё идёт)':'');
+  return{html,inP,lbl,months,curM};
+}
 const MONTHS_RU=['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
 const monthLbl=m=>`${MONTHS_RU[+m.slice(5)-1]} ${m.slice(0,4)}`;
 function compAgg(L){const a={n:L.length,P:0,N:0,D:0,st:[]};for(const r of L){if(r[5]==='позитив')a.P++;else if(r[5]==='нейтрально')a.N++;else if(r[5]==='негатив')a.D++;if(r[4]!=null)a.st.push(r[4])}
@@ -782,18 +800,11 @@ function vComp(){
   if(!COMP){$('#filters').innerHTML='';vv.innerHTML='<div class="loading"><div class="spin"></div>Загружаю отзывы о конкурентах…</div>';loadComp();return}
   if(COMP.error){$('#filters').innerHTML='';vv.innerHTML=`<div class="err">${COMP.auth||`<b>Не удалось загрузить таблицу конкурентов.</b> ${esc(COMP.error)}`}</div>`;return}
   const CO=COMP.companies,US=CO[0],ALL=COMP.rows;
-  // Период: последние 12 месяцев (по умолчанию) · год · месяц из последних 12 · всё время. История у площадок — с 2011 года.
-  const now=new Date(),curM=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const y12=new Date(now);y12.setFullYear(now.getFullYear()-1);const from12=y12.toISOString().slice(0,10);
-  const months=[...new Set(ALL.map(r=>r[1].slice(0,7)))].sort().reverse().filter(m=>m>=from12.slice(0,7));
-  const years=[...new Set(ALL.map(r=>r[1].slice(0,4)))].sort().reverse();
-  if(S.cm&&S.cm!=='all'&&!months.includes(S.cm)&&!years.includes(S.cm))S.cm='';
-  const opt=(v,l)=>`<option value="${v}"${v===S.cm?' selected':''}>${l}</option>`;
-  $('#filters').innerHTML=`<label>Период<select id="f-cm">${opt('','Последние 12 месяцев')}<optgroup label="Год">${years.map(y=>opt(y,y+(y===curM.slice(0,4)?' (идёт)':''))).join('')}</optgroup><optgroup label="Месяц">${months.map(m=>opt(m,monthLbl(m)+(m===curM?' (идёт)':''))).join('')}</optgroup>${opt('all','Всё время')}</select></label>`;
+  // Период — общий с «Площадками» (revPeriod, S.cm); «всё время» здесь — с первого отзыва о конкурентах
+  const RP=revPeriod(ALL.map(r=>r[1]),COMP.since),months=RP.months,curM=RP.curM,pLbl=RP.lbl;
+  $('#filters').innerHTML=RP.html;
   $('#f-cm').onchange=e=>{S.cm=e.target.value;save();render()};
-  const inP=r=>S.cm===''?r[1]>=from12:S.cm==='all'?true:r[1].startsWith(S.cm);
-  const pLbl=S.cm===''?'последние 12 месяцев':S.cm==='all'?'всё время'+(COMP.since?' (с '+fmtIso(COMP.since)+')':''):S.cm.length===4?S.cm+' год'+(S.cm===curM.slice(0,4)?' (идёт)':''):monthLbl(S.cm)+(S.cm===curM?' (месяц ещё идёт)':'');
-  const L=ALL.filter(inP);
+  const L=ALL.filter(r=>RP.inP(r[1]));
   const by=co=>L.filter(r=>r[0]===co);
   const A=Object.fromEntries(CO.map(co=>[co,compAgg(by(co))]));
   const low=a=>a.n<COMP_MIN;
@@ -976,7 +987,7 @@ function vSummary(){
   // вывод одной фразой: уровень флота и кто заметно (не случайно) отстаёт
   const lag=ships.map(s=>({s,a:agg(trips.filter(t=>t.ship===s))[0]})).filter(x=>x.a.n>=MIN_N&&Math.round(heatDiff(x.a,A[0]))<=-3&&heatSig(x.a,A[0])).sort((p,q)=>p.a.nps-q.a.nps);
   const zw=A[0].nps>=85?'сильная зона':A[0].nps>=70?'зона внимания':'проседает';
-  const verdict=`NPS флота <b>${A[0].nps}</b> по ${A[0].n.toLocaleString('ru-RU')} ответам — ${zw}. `+(lag.length?`Заметно ниже флота: ${lag.slice(0,3).map(x=>`<b>${esc(x.s)}</b> (${x.a.nps})`).join(', ')}.`:'Ни один теплоход заметно не отстаёт от флота.');
+  const verdict=(DATA.span?`<span class="muted">Анкеты по рейсам ${DATA.span}.</span> `:'')+`NPS флота <b>${A[0].nps}</b> по ${A[0].n.toLocaleString('ru-RU')} ответам — ${zw}. `+(lag.length?`Заметно ниже флота: ${lag.slice(0,3).map(x=>`<b>${esc(x.s)}</b> (${x.a.nps})`).join(', ')}.`:'Ни один теплоход заметно не отстаёт от флота.');
   vv.innerHTML=`<div class="grid" style="gap:16px"><p class="verdict" style="margin:0">${verdict}</p>
    <div class="grid g-kpi">${kpiNps('NPS «Рекомендуете Созвездие»',A[0])}${kpiPnd(A[0])}${kpiNps('Впечатление от круиза',A[1])}${kpiPlain('Отзывов (ID_FB)',fbCount(trips),'',`${DATA.rows.length} анкет · ${trips.length} рейсов · ${ships.length} теплоходов`)}</div>
    <div class="grid g-2">${shipBars()}${trendChart(trips,'Динамика NPS по рейсам','Каждая точка — рейс по дате отправления; зелёная полоса — зона 85+, красная — ниже 70')}</div>
