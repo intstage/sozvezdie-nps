@@ -483,6 +483,7 @@ function goScroll(){const a=GO_AFTER;if(!a)return;let el=null;
 /* state */
 const S={tab:'summary',ship:null,trip:null,heat:'dev',cf:'crit',q:'',route:'',pp:'',ps:'',py:'',cm:''};
 try{const s=JSON.parse(localStorage.getItem('nps-state')||'{}');Object.assign(S,s)}catch(e){}
+S.cm='';   // период отзывов при каждом открытии — последние 12 месяцев (по умолчанию); внутри сеанса выбор общий для «Площадок» и «Конкурентов»
 const TABS=[['summary','Сводка'],['ships','Все теплоходы'],['ship','Теплоход'],['cruises','Круизы'],['trip','Рейс'],['clients','Клиенты'],['pub','Площадки'],['comp','Конкуренты']];
 if(location.hash&&TABS.some(t=>t[0]===location.hash.slice(1)))S.tab=location.hash.slice(1);
 function save(){try{localStorage.setItem('nps-state',JSON.stringify(S))}catch(e){}}
