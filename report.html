@@ -132,6 +132,12 @@ select,input[type=search]{font:15px var(--body);color:var(--ink);background:var(
 .muted{color:var(--muted)}
 .tbl-wrap{overflow-x:auto;margin-inline:-4px}
 thead th{position:sticky;z-index:3;background:var(--surface);box-shadow:inset 0 -1px 0 var(--line)}
+.kpi.go{cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.kpi.go .lbl{display:flex;justify-content:space-between;gap:8px}.kpi.go .lbl::after{content:"↓";color:var(--accent);font-size:13px;letter-spacing:0}
+.kpi.go[data-go^="@"] .lbl::after{content:"→"}
+@media (hover:hover){.kpi.go:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(0,0,0,.07)}}
+.kpi.go:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.panel[id]{scroll-margin-top:calc(var(--nav-h,57px) + 12px)}
 @media (min-width:761px){.tbl-wrap:not(.tw-x){overflow:visible}thead th{top:var(--nav-h,57px)}.tw-x{max-height:80vh;overflow:auto;overscroll-behavior:contain}.tw-x thead th{top:0}}
 @media (max-width:760px){.tbl-wrap:not(:has(table.stack)){max-height:75vh;overflow:auto;overscroll-behavior:contain}thead th{top:0}}
 td.nw{white-space:nowrap}td.st-text{max-width:280px}
@@ -736,14 +742,14 @@ function vPub(){
 
   vv.innerHTML=`<div class="grid">
    <p class="verdict" style="margin:0">Отзывы о «Созвездии» за <b>${RP.lbl}</b>${S.pp?' · '+esc(S.pp):''}${S.ps?' · '+esc(S.ps):''}. Период общий с вкладкой «Конкуренты» — при одном периоде цифры «Созвездия» там те же.</p>
-   <div class="grid g-kpi">${kpiPlain('Отзывов на площадках',A.n,'шт.',`${byPlat.length} площад${byPlat.length===1?'ка':byPlat.length<5?'ки':'ок'}${noRating?` · без оценки ${noRating}`:''}`)}
-    <div class="panel kpi"><div class="lbl">Средняя оценка</div><div class="val">${A.avg==null?'—':A.avg.toFixed(2).replace('.',',')}<small>из 5</small></div><div class="foot"><span>по ${A.rs.length} отзывам с оценкой</span></div></div>
-    <div class="panel kpi"><div class="lbl">Тональность</div><div class="val">${pct(A.P,A.t)}%<small>позитив</small></div>${pndT(A,10)}<div class="pnd-leg"><span class="p">Позитив ${A.P}</span><span class="n">Нейтр. ${A.N}</span><span class="d">Негатив ${A.D}</span></div></div>
-    ${kpiPlain('Негативных',A.D,'отзывов',`${pct(A.D,A.t)}% от размеченных`)}</div>
+   <div class="grid g-kpi">${kgo(kpiPlain('Отзывов на площадках',A.n,'шт.',`${byPlat.length} площад${byPlat.length===1?'ка':byPlat.length<5?'ки':'ок'}${noRating?` · без оценки ${noRating}`:''}`),'pub-plat','По площадкам')}
+    <div class="panel kpi go" data-go="pub-plat" title="По площадкам" role="link" tabindex="0"><div class="lbl">Средняя оценка</div><div class="val">${A.avg==null?'—':A.avg.toFixed(2).replace('.',',')}<small>из 5</small></div><div class="foot"><span>по ${A.rs.length} отзывам с оценкой</span></div></div>
+    <div class="panel kpi go" data-go="pub-years" title="Динамика по годам" role="link" tabindex="0"><div class="lbl">Тональность</div><div class="val">${pct(A.P,A.t)}%<small>позитив</small></div>${pndT(A,10)}<div class="pnd-leg"><span class="p">Позитив ${A.P}</span><span class="n">Нейтр. ${A.N}</span><span class="d">Негатив ${A.D}</span></div></div>
+    ${kgo(kpiPlain('Негативных',A.D,'отзывов',`${pct(A.D,A.t)}% от размеченных`),'pub-neg','Свежие негативные отзывы')}</div>
    <div class="grid g-2">
-    <div class="panel"><h2>Площадки</h2><p class="sub">Оценка приведена к шкале из 5 · тональность: позитив · нейтрально · негатив</p>
+    <div class="panel" id="pub-plat"><h2>Площадки</h2><p class="sub">Оценка приведена к шкале из 5 · тональность: позитив · нейтрально · негатив</p>
      <div class="tbl-wrap"><table class="stack"><thead><tr><th>Площадка</th><th class="r">Отзывов</th><th class="r">Средняя / лайки</th><th>Тональность</th></tr></thead><tbody>${byPlat.map(x=>rowTbl('Площадка',x)).join('')}</tbody></table></div></div>
-    <div class="panel"><h2>Динамика по годам</h2><p class="sub">Сколько отзывов и какая доля негатива</p>
+    <div class="panel" id="pub-years"><h2>Динамика по годам</h2><p class="sub">Сколько отзывов и какая доля негатива</p>
      <div class="tbl-wrap"><table class="stack"><thead><tr><th>Год</th><th class="r">Отзывов</th><th class="r">Средняя</th><th>Тональность</th></tr></thead><tbody>${byYear.map(x=>rowTbl('Год',x)).join('')}</tbody></table></div></div>
    </div>
    <div class="panel"><h2>Что хвалят и на что жалуются</h2><p class="sub">Темы из «Основных тезисов»: сколько раз тему хвалят и сколько ругают · сначала темы с наибольшим числом жалоб</p>
@@ -852,6 +858,12 @@ function vComp(){
 // карточка: цифра + отклонение от базы; ниже зона и «к флоту: 88»; серым — число ответов
 const nfmt=n=>n==null?'—':new Intl.NumberFormat('ru-RU').format(n);
 const npl=(n,a,b,c)=>{const x=Math.abs(n)%100,y=x%10;return x>10&&x<20?c:y===1?a:y>=2&&y<=4?b:c};
+// Карточка ведёт к подробному блоку: data-go="id" — блок на этой вкладке (↓), "@вкладка" или "@вкладка#id" — другая вкладка (→); "a|b" — первый найденный блок
+const kgo=(html,to,title)=>html.replace('<div class="panel kpi"',`<div class="panel kpi go" data-go="${to}" title="${title}" role="link" tabindex="0"`);
+function kpiGo(el){const g=el.dataset.go,find=ids=>ids.split('|').map(i=>document.getElementById(i)).find(Boolean),to=t=>t&&t.scrollIntoView({behavior:'smooth',block:'start'});
+  if(g[0]==='@'){const[tab,anc]=g.slice(1).split('#');go(tab);if(anc)requestAnimationFrame(()=>to(find(anc)))}else to(find(g))}
+document.addEventListener('click',e=>{const k=e.target.closest('#view .kpi.go');if(k)kpiGo(k)});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('#view .kpi.go')){e.preventDefault();kpiGo(e.target)}});
 function kpiNps(title,a,ref,refLbl){const has=a.nps!=null;return`<div class="panel kpi"><div class="lbl">${title}</div><div class="val">${has?a.nps:'—'}${has&&ref!=null?`<small>${delta(a.nps,ref)}</small>`:''}</div><div class="foot">${pill(a.nps,a.n)}${ref!=null?`<span>${refLbl}: ${ref}</span>`:''}</div><div class="foot"><span class="muted">${has?`из 100 · ${nfmt(a.n)} ${npl(a.n,'ответ','ответа','ответов')}`:'нет ответов'}</span></div></div>`}
 function kpiPnd(a){if(!a.n)return`<div class="panel kpi"><div class="lbl">Структура ответов</div><div class="val">0<small>ответов</small></div><div class="foot muted">Нет ответов</div></div>`;return`<div class="panel kpi"><div class="lbl">Структура ответов</div><div class="val">${a.n}<small>ответов</small></div>${pnd(a,12)}<div class="pnd-leg"><span class="p">Сторонники ${Math.round(a.P/a.n*100)}%</span><span class="n">Нейтр. ${Math.round(a.N/a.n*100)}%</span><span class="d">Критики ${Math.round(a.D/a.n*100)}%</span></div></div>`}
 function kpiPlain(title,val,unit,foot){const f=String(foot).split(' · ');return`<div class="panel kpi"><div class="lbl">${title}</div><div class="val">${val}${unit?`<small>${unit}</small>`:''}</div><div class="foot"><span>${f[0]}</span></div>${f.length>1?`<div class="foot"><span class="muted">${f.slice(1).join(' · ')}</span></div>`:''}</div>`}
@@ -895,7 +907,7 @@ function whyLagging(){
       <p class="why-line"><span class="why-lbl">Где проседает</span>${dn.length?dn.map(g=>`<span class="chip bad">${SHORT[g.k]} ${heatSigned(g.d)}</span>`).join(''):'<span class="muted">по отдельным пунктам на уровне флота</span>'}</p>
       ${up.length?`<p class="why-line"><span class="why-lbl">Сильнее флота</span>${up.map(g=>`<span class="chip good">${SHORT[g.k]} ${heatSigned(g.d)}</span>`).join('')}</p>`:''}
       ${bad.length?`<p class="why-line"><span class="why-lbl">Провальные рейсы</span>${bad.map(x=>`<button type="button" class="chip trip-chip" data-trip="${x.t.id}">${fmtD(x.t.dep)}–${fmtD(x.t.arr)} · NPS ${x.a.nps}</button>`).join('')}</p>`:''}</div>`};
-  return`<div class="panel"><h2>Почему теплоходы ниже флота</h2><p class="sub">Теплоходы, у которых рекомендация ниже флота на 3+ пункта: из чего складывается разница и какие пункты анкеты её дают. Разница — в пунктах индекса</p>
+  return`<div class="panel" id="sum-why"><h2>Почему теплоходы ниже флота</h2><p class="sub">Теплоходы, у которых рекомендация ниже флота на 3+ пункта: из чего складывается разница и какие пункты анкеты её дают. Разница — в пунктах индекса</p>
   <div class="why-grid">${rows.map(card).join('')}</div></div>`}
 
 function shipBars(){
@@ -904,7 +916,7 @@ function shipBars(){
     return{s,...a,why:dn.length?'<br>Ниже флота: '+dn.map(g=>SHORT[g.k]+' '+heatSigned(g.d)).join(', '):''}}).sort((a,b)=>byNpsDesc(a.nps,b.nps));
   const lo=Math.min(0,...rows.map(r=>r.nps??0));                // NPS бывает отрицательным: шкала от min(0, минимум) до 100
   const W=chartW('c-ships',560),rowH=30,L=W<420?118:150,R=40,H=rows.length*rowH+24,x=v=>L+(W-L-R)*(Math.max(lo,v??lo)-lo)/(100-lo),f=FLEET[0].nps;
-  return`<div class="panel"><h2>NPS «Рекомендуете Созвездие» по теплоходам</h2><p class="sub">Пунктир — среднее по флоту (${f}). Нажмите на теплоход, чтобы открыть его отчёт</p>
+  return`<div class="panel" id="sum-ships"><h2>NPS «Рекомендуете Созвездие» по теплоходам</h2><p class="sub">Пунктир — среднее по флоту (${f}). Нажмите на теплоход, чтобы открыть его отчёт</p>
   <svg id="c-ships" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="NPS по теплоходам">
   ${[lo,0,25,50,75,100].filter((v,i,a)=>a.indexOf(v)===i).map(v=>`<line class="grid-l" x1="${x(v)}" x2="${x(v)}" y1="0" y2="${H-18}"/><text x="${x(v)}" y="${H-4}" text-anchor="middle">${v}</text>`).join('')}
   ${rows.map((r,i)=>`<g style="cursor:pointer" data-ship="${esc(r.s)}" data-tip="<b>${esc(r.s)}</b><br>${r.nps==null?'нет ответов':`NPS ${r.nps} · ${r.n} ответов<br>Критиков: ${r.D} (${r.n?(r.D/r.n*100).toFixed(1).replace('.',','):0}%)${r.why}`}"><rect x="0" y="${i*rowH}" width="${W}" height="${rowH}" fill="transparent"/><text x="${L-10}" y="${i*rowH+19}" text-anchor="end" style="fill:var(--ink);font-size:12.5px">${esc(r.s.length>(W<420?14:22)?r.s.slice(0,W<420?13:21)+'…':r.s)}</text><rect class="bxh" style="--d:${i*30}ms" x="${Math.min(x(0),x(r.nps))}" y="${i*rowH+8}" width="${r.nps==null?0:Math.abs(x(r.nps)-x(0))}" height="14" rx="4" fill="${ZC[zone(r.nps,r.n)]}"/><text x="${Math.max(x(0),x(r.nps))+6}" y="${i*rowH+19.5}" style="fill:var(--ink);font-weight:600">${r.nps??'—'}</text></g>`).join('')}
@@ -960,7 +972,7 @@ function heatmap(){
         const sig=!low&&heatSig(x,f),cls=low?'low':dev?(sig?heatBand(d):'eq'):zone(x.nps,x.n);
         const tip=`<b>${esc(c.s)}</b> · ${SHORT[k]}<br>Индекс ${x.nps??'—'} · ${x.n} отв.<br>Флот ${f.nps??'—'} · разница ${heatSigned(d)}${low?'<br>Мало ответов — выводы делать рано':!sig&&Math.round(d)!==0?'<br>Разница в пределах случайного разброса':''}`;
         return`<td class="hc ${cls}"><button type="button" data-heat-tip data-tip="${tip}" aria-label="${esc(c.s)}, ${SHORT[k]}: индекс ${x.nps??'нет'}, флот ${f.nps??'нет'}, разница ${heatSigned(d)}, ответов ${x.n}">${x.n?(dev?heatSigned(d):x.nps):'—'}</button></td>`}).join('')}</tr>`}});
-  return`<div class="panel heat-panel"><div class="ph-head"><div><h2>Что проседает по теплоходам</h2><p class="sub">${dev?'В клетке — на сколько пунктов теплоход выше (+) или ниже (−) флота по этому пункту анкеты':'В клетке — индекс пункта анкеты по формуле NPS'}</p></div>
+  return`<div class="panel heat-panel" id="sum-heat"><div class="ph-head"><div><h2>Что проседает по теплоходам</h2><p class="sub">${dev?'В клетке — на сколько пунктов теплоход выше (+) или ниже (−) флота по этому пункту анкеты':'В клетке — индекс пункта анкеты по формуле NPS'}</p></div>
   <div class="seg" role="group" aria-label="Что показывать"><button data-heat="dev" aria-pressed="${dev}">Разница с флотом</button><button data-heat="abs" aria-pressed="${!dev}">Оценки</button></div></div>
   <div class="heat-leg">${leg}</div>
   <details class="heat-help"><summary>Как читать</summary><ul><li><b>Флот</b> — общий индекс всех ${ships.length} теплоходов по пункту. Теплоходы с большим числом ответов влияют на него сильнее.</li><li>Красная клетка только у одного теплохода — по этому пункту он отстаёт от остальных.</li><li>Строка жёлтая или красная у всех теплоходов в режиме «Оценки» — пункт оценивают ниже по всей компании.</li><li>Разница с флотом считается по точным значениям. Поэтому она может отличаться на 1 от разницы округлённых чисел в режиме «Оценки».</li><li>Нажмите на клетку, чтобы увидеть индекс теплохода, индекс флота и число ответов.</li></ul></details>
@@ -990,7 +1002,7 @@ function vSummary(){
   const zw=A[0].nps>=85?'сильная зона':A[0].nps>=70?'зона внимания':'проседает';
   const verdict=(DATA.span?`<span class="muted">Анкеты по рейсам ${DATA.span}.</span> `:'')+`NPS флота <b>${A[0].nps}</b> по ${A[0].n.toLocaleString('ru-RU')} ответам — ${zw}. `+(lag.length?`Заметно ниже флота: ${lag.slice(0,3).map(x=>`<b>${esc(x.s)}</b> (${x.a.nps})`).join(', ')}.`:'Ни один теплоход заметно не отстаёт от флота.');
   vv.innerHTML=`<div class="grid" style="gap:16px"><p class="verdict" style="margin:0">${verdict}</p>
-   <div class="grid g-kpi">${kpiNps('NPS «Рекомендуете Созвездие»',A[0])}${kpiPnd(A[0])}${kpiNps('Впечатление от круиза',A[1])}${kpiPlain('Отзывов (ID_FB)',fbCount(trips),'',`${DATA.rows.length} анкет · ${trips.length} рейсов · ${ships.length} теплоходов`)}</div>
+   <div class="grid g-kpi">${kgo(kpiNps('NPS «Рекомендуете Созвездие»',A[0]),'sum-ships','NPS по теплоходам')}${kgo(kpiPnd(A[0]),'sum-why|sum-heat','Почему теплоходы ниже флота')}${kgo(kpiNps('Впечатление от круиза',A[1]),'sum-heat','Что проседает по теплоходам')}${kgo(kpiPlain('Отзывов (ID_FB)',fbCount(trips),'',`${DATA.rows.length} анкет · ${trips.length} рейсов · ${ships.length} теплоходов`),'@clients','Открыть «Клиенты»')}</div>
    <div class="grid g-2">${shipBars()}${trendChart(trips,'Динамика NPS по рейсам','Каждая точка — рейс по дате отправления; зелёная полоса — зона 85+, красная — ниже 70')}</div>
    ${whyLagging()}
    <div class="grid g-2">${zoneLists(A)}</div>
@@ -1036,11 +1048,11 @@ function vShip(){
   const L=trips.filter(t=>t.ship===S.ship).sort(byDate),A=agg(L);
   const vv=$('#view');
   vv.innerHTML=`<div class="grid">
-   <div class="grid g-kpi">${kpiNps('NPS «Рекомендуете Созвездие»',A[0],FLEET[0].nps,'к флоту')}${kpiPnd(A[0])}${kpiNps('Впечатление от теплохода',A[2],FLEET[2].nps,'к флоту')}${kpiPlain('Отзывов (ID_FB)',fbCount(L),'',`${L.reduce((a,t)=>a+t.n,0)} анкет · ${L.length} рейсов · ${new Set(L.filter(t=>t.routeKnown).map(t=>t.route)).size} маршрутов`)}</div>
+   <div class="grid g-kpi">${kgo(kpiNps('NPS «Рекомендуете Созвездие»',A[0],FLEET[0].nps,'к флоту'),'ship-trips','Рейсы теплохода')}${kgo(kpiPnd(A[0]),'ship-trips','Рейсы теплохода')}${kgo(kpiNps('Впечатление от теплохода',A[2],FLEET[2].nps,'к флоту'),'ship-profile','Профиль теплохода по всем пунктам')}${kgo(kpiPlain('Отзывов (ID_FB)',fbCount(L),'',`${L.reduce((a,t)=>a+t.n,0)} анкет · ${L.length} рейсов · ${new Set(L.filter(t=>t.routeKnown).map(t=>t.route)).size} маршрутов`),'@clients','Открыть «Клиенты»')}</div>
    <div class="grid g-2">${zoneLists(A,FLEET)}</div>
-   <div class="grid g-2"><div class="panel"><h2>Профиль теплохода по всем пунктам</h2><p class="sub">Полоса — сторонники / нейтральные / критики; справа — NPS и отклонение от флота</p>${profile(A,FLEET,'Флот')}</div>
+   <div class="grid g-2"><div class="panel" id="ship-profile"><h2>Профиль теплохода по всем пунктам</h2><p class="sub">Полоса — сторонники / нейтральные / критики; справа — NPS и отклонение от флота</p>${profile(A,FLEET,'Флот')}</div>
    <div class="grid" style="align-content:start">${trendChart(L,'NPS по рейсам теплохода','Точка — рейс; нажмите, чтобы открыть рейс')}
-   <div class="panel"><h2>Рейсы</h2><p class="sub">Нажмите на строку, чтобы открыть рейс</p><div class="tbl-wrap"><table><thead><tr><th>Даты</th><th>Маршрут</th><th class="r">Отв.</th><th class="r">Отзывов</th><th class="r">NPS</th><th class="r">Δ</th></tr></thead><tbody>${L.map(t=>{const a=agg([t]);return`<tr class="click" data-trip="${t.id}" tabindex="0"><td style="white-space:nowrap">${fmtD(t.dep)}–${fmtD(t.arr)}</td><td>${t.cruise?`<span class="chip">${esc(t.cruise)}</span> `:''}${esc(t.routeShort)}</td><td class="r">${a[0].n}</td><td class="r">${t.fb}</td><td class="r" style="color:${ZC[zone(a[0].nps,a[0].n)]};font-weight:600">${a[0].nps??'—'}</td><td class="r">${delta(a[0].nps,A[0].nps)}</td></tr>`}).join('')}</tbody></table></div></div>
+   <div class="panel" id="ship-trips"><h2>Рейсы</h2><p class="sub">Нажмите на строку, чтобы открыть рейс</p><div class="tbl-wrap"><table><thead><tr><th>Даты</th><th>Маршрут</th><th class="r">Отв.</th><th class="r">Отзывов</th><th class="r">NPS</th><th class="r">Δ</th></tr></thead><tbody>${L.map(t=>{const a=agg([t]);return`<tr class="click" data-trip="${t.id}" tabindex="0"><td style="white-space:nowrap">${fmtD(t.dep)}–${fmtD(t.arr)}</td><td>${t.cruise?`<span class="chip">${esc(t.cruise)}</span> `:''}${esc(t.routeShort)}</td><td class="r">${a[0].n}</td><td class="r">${t.fb}</td><td class="r" style="color:${ZC[zone(a[0].nps,a[0].n)]};font-weight:600">${a[0].nps??'—'}</td><td class="r">${delta(a[0].nps,A[0].nps)}</td></tr>`}).join('')}</tbody></table></div></div>
    <div class="panel"><h2>Официанты</h2><p class="sub">Индекс по пункту «Работа официанта» — как NPS: % оценок 9–10 − % оценок 0–6; меньше 10 ответов — серым</p>${waitersTbl(L)}</div></div></div></div>`;
   bindNav(vv);
 }
@@ -1079,11 +1091,11 @@ function vTrip(){
   const vv=$('#view');
   vv.innerHTML=`<div class="grid">
    <div class="panel"><div class="trip-head"><h2>${esc(t.ship)}</h2><span>${esc(t.route)}</span></div><p class="sub" style="margin:4px 0 0">${t.cruise?`Круиз ${esc(t.cruise)} · `:''}Отправление ${esc(t.dep)} · прибытие ${esc(t.arr)} · ${t.n} анкет · ${t.fb} отзывов (ID_FB) · лист ${esc(t.sheet)}</p></div>
-   <div class="grid g-kpi">${kpiNps('NPS «Рекомендуете Созвездие»',A[0],SA[0].nps,'к теплоходу')}${kpiPnd(A[0])}${kpiNps('Впечатление от круиза',A[1],SA[1].nps,'к теплоходу')}${kpiNps('Впечатление от маршрута',A[3],FLEET[3].nps,'к флоту')}</div>
-   <div class="grid g-2"><div class="panel"><h2>Все пункты анкеты</h2><p class="sub">Справа — отклонение от среднего по этому теплоходу</p>${profile(A,SA,'Теплоход')}</div>
+   <div class="grid g-kpi">${kgo(kpiNps('NPS «Рекомендуете Созвездие»',A[0],SA[0].nps,'к теплоходу'),'trip-crit','Критики рейса')}${kgo(kpiPnd(A[0]),'trip-crit','Критики рейса')}${kgo(kpiNps('Впечатление от круиза',A[1],SA[1].nps,'к теплоходу'),'trip-profile','Все пункты анкеты')}${kgo(kpiNps('Впечатление от маршрута',A[3],FLEET[3].nps,'к флоту'),'trip-profile','Все пункты анкеты')}</div>
+   <div class="grid g-2"><div class="panel" id="trip-profile"><h2>Все пункты анкеты</h2><p class="sub">Справа — отклонение от среднего по этому теплоходу</p>${profile(A,SA,'Теплоход')}</div>
    <div class="grid" style="align-content:start">${zoneLists(A,SA,'теплоход')}
    <div class="panel"><h2>Официанты рейса</h2><p class="sub">По анкетам этого рейса</p>${waitersTbl([t])}</div></div></div>
-   <div class="panel"><h2>Критики рейса <span class="sample">обзвон</span></h2><p class="sub">Анкеты с оценкой рекомендации 0–6; клиент и заявка — у анкет, связанных с заявкой</p>${crit.length?critTable(crit):'<p class="muted">Критиков среди связанных анкет нет — или анкеты рейса ещё не привязаны к заявкам.</p>'}</div>
+   <div class="panel" id="trip-crit"><h2>Критики рейса <span class="sample">обзвон</span></h2><p class="sub">Анкеты с оценкой рекомендации 0–6; клиент и заявка — у анкет, связанных с заявкой</p>${crit.length?critTable(crit):'<p class="muted">Критиков среди связанных анкет нет — или анкеты рейса ещё не привязаны к заявкам.</p>'}</div>
    <div class="panel"><h2>Что запомнилось</h2><p class="sub">Свободные ответы пассажиров · сначала — от тех, кто ставит низкие оценки</p>${quotes.length?`<div class="quotes">${quotes.slice(0,12).map(q=>`<div class="quote">${esc(q[5])}<div class="who">${sc(q[3][0])} ${esc(q[7]||'анкета без заявки')}${q[9]?' · каюта '+esc(q[9]):''}</div></div>`).join('')}</div>`:'<p class="muted">Для этого рейса свободные ответы ещё не загружены.</p>'}</div>
   </div>`;
   bindNav(vv);
@@ -1146,11 +1158,11 @@ function vClients(){
   const W=chartW('c-seg',560),rowH=40,Lw=W<420?130:170,Rw=50,x=v=>Lw+(W-Lw-Rw)*Math.max(0,v)/100;
   const vv=$('#view');
   vv.innerHTML=`<div class="grid">
-   <div class="grid g-kpi">${kpiNps('NPS частных лиц',seg[0],seg[1].nps,'к агентствам')}${kpiNps('NPS агентств',seg[1])}${kpiNps('NPS повторных гостей (по анкете)',seg[3],seg[4].nps,'к новичкам')}${kpiPlain('Критиков к обзвону',R.filter(r=>r[3][0]<=6&&r[6]).length,'клиентов','есть ФИО и номер заявки')}</div>
-   <div class="grid g-2"><div class="panel"><h2>NPS по сегментам клиентов</h2><p class="sub">Анкеты, сопоставленные с заявками ACP</p>
+   <div class="grid g-kpi">${kgo(kpiNps('NPS частных лиц',seg[0],seg[1].nps,'к агентствам'),'cl-seg','NPS по сегментам')}${kgo(kpiNps('NPS агентств',seg[1]),'cl-seg','NPS по сегментам')}${kgo(kpiNps('NPS повторных гостей (по анкете)',seg[3],seg[4].nps,'к новичкам'),'cl-seg','NPS по сегментам')}${kgo(kpiPlain('Критиков к обзвону',R.filter(r=>r[3][0]<=6&&r[6]).length,'клиентов','есть ФИО и номер заявки'),'cl-panel','Клиенты по оценке')}</div>
+   <div class="grid g-2"><div class="panel" id="cl-seg"><h2>NPS по сегментам клиентов</h2><p class="sub">Анкеты, сопоставленные с заявками ACP</p>
    <svg id="c-seg" viewBox="0 0 ${W} ${seg.length*rowH+10}" width="100%" role="img" aria-label="NPS по сегментам">${seg.map((s,i)=>`<g data-tip="<b>${s.l}</b><br>NPS ${s.nps} · ${s.n} анкет<br>Сторонники ${s.P} · критики ${s.D}"><text x="0" y="${i*rowH+17}" style="fill:var(--ink);font-size:12.5px">${s.l}</text><text x="0" y="${i*rowH+31}">${s.n} анкет</text><rect class="bxh" style="--d:${i*40}ms" x="${Lw}" y="${i*rowH+10}" width="${x(s.nps)-Lw}" height="14" rx="4" fill="${ZC[zone(s.nps,s.n)]}"/><text x="${x(s.nps)+6}" y="${i*rowH+21.5}" style="fill:var(--ink);font-weight:600">${s.nps}</text></g>`).join('')}</svg></div>
    <div class="panel"><h2>Что чаще всего ругают критики</h2><p class="sub">Пункты, где клиенты-критики ставят 0–6</p>${(()=>{const C=R.filter(r=>r[3][0]<=6);const cnt=SHORT.map((s,k)=>({s,c:k?C.filter(r=>r[3][k]!=null&&r[3][k]<=6).length:0})).filter(x=>x.c).sort((a,b)=>b.c-a.c).slice(0,7);const mx=cnt[0]?.c||1;return`<ul class="zone-list">${cnt.map(x=>`<li style="grid-template-columns:minmax(110px,1.3fr) 2fr 40px"><span>${x.s}</span><div class="bar"><i style="width:${x.c/mx*100}%;background:var(--bad)"></i></div><span class="num">${x.c}</span></li>`).join('')}</ul><p class="sub" style="margin-top:10px">Из ${C.length} критиков в выборке</p>`})()}</div></div>
-   <div class="panel"><div class="ph-head"><h2>Клиенты по оценке</h2><button type="button" class="btn" id="cl-dl" title="Файл CSV со всеми клиентами по текущим фильтрам">Скачать список</button></div><p class="sub" id="cl-dl-msg" hidden></p><div id="cl-list"></div></div></div>`;
+   <div class="panel" id="cl-panel"><div class="ph-head"><h2>Клиенты по оценке</h2><button type="button" class="btn" id="cl-dl" title="Файл CSV со всеми клиентами по текущим фильтрам">Скачать список</button></div><p class="sub" id="cl-dl-msg" hidden></p><div id="cl-list"></div></div></div>`;
   drawList();
   $('#cl-dl').onclick=e=>{if(e.detail)e.currentTarget.blur();downloadClients(list(),who())};
   $('#f-q').oninput=e=>{S.q=e.target.value;save();drawList()};
