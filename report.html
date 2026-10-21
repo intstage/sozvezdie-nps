@@ -633,7 +633,7 @@ document.querySelectorAll('.js-refresh').forEach(b=>b.onclick=e=>{if(e.detail)b.
 /* Масштаб: 80–130 %, шаг 10 %. Хранится на этом устройстве. */
 const ZOOMS=[0.8,0.9,1,1.1,1.2,1.3];
 let zoom=1;try{const z=+localStorage.getItem('nps-zoom');if(ZOOMS.includes(z))zoom=z}catch(e){}
-function applyZoom(z){zoom=z;document.documentElement.style.zoom=z;const v=document.querySelector('.zoom-val');if(v)v.textContent=Math.round(z*100)+'%';
+function applyZoom(z){zoom=z;document.documentElement.style.zoom=z;ftRun();const v=document.querySelector('.zoom-val');if(v)v.textContent=Math.round(z*100)+'%';
   document.querySelector('[data-zoom="-1"]').disabled=z<=ZOOMS[0];document.querySelector('[data-zoom="1"]').disabled=z>=ZOOMS[ZOOMS.length-1];
   try{localStorage.setItem('nps-zoom',z)}catch(e){}
   if(typeof fitHeader==='function')fitHeader();if(typeof navHeight==='function')navHeight()}
@@ -1195,6 +1195,12 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitHeader);
 /** Высота прилипшей строки вкладок — к ней прилипают заголовки таблиц. */
 function navHeight(){const n=document.getElementById('tabs');if(n)document.documentElement.style.setProperty('--nav-h',n.getBoundingClientRect().height+'px')}
 addEventListener('resize',navHeight);
+// Широкая таблица, которой не хватает места (узкий экран, масштаб 110–130%), прокручивается внутри карточки, а не вылезает за неё.
+// Таблицы, что помещаются, остаются без своей прокрутки — их шапка прилипает к верху страницы.
+function fitTables(){document.querySelectorAll('#view .tbl-wrap').forEach(w=>{if(w.classList.contains('tw-auto'))w.classList.remove('tw-x','tw-auto');
+  if(!w.classList.contains('tw-x')&&w.scrollWidth>w.clientWidth+2)w.classList.add('tw-x','tw-auto')})}
+var ftR=0;function ftRun(){cancelAnimationFrame(ftR);ftR=requestAnimationFrame(fitTables)}
+new MutationObserver(ftRun).observe(document.getElementById('view'),{childList:true,subtree:true});addEventListener('resize',ftRun);
 $('#btn-back').onclick=e=>{if(e.detail)e.currentTarget.blur();goBack()};
 $('#btn-top').onclick=e=>{if(e.detail)e.currentTarget.blur();window.scrollTo({top:0,behavior:'smooth'})};
 addEventListener('scroll',()=>{$('#btn-top').hidden=scrollY<400},{passive:true});
