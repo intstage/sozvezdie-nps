@@ -58,7 +58,7 @@ nav.tabs button:focus:not(:focus-visible){outline:none}
   nav.tabs>#filters>label,nav.tabs>#filters .filters>label,nav.tabs>#filters .fgroup{font-size:0;gap:0;min-width:0}
   nav.tabs>#filters>label>*,nav.tabs>#filters .filters>label>*,nav.tabs>#filters .fgroup>*{font-size:13px}
   nav.tabs>#filters select{padding:0 28px 0 10px;background-position:right 9px center;box-sizing:border-box}   /* в прилипшей строке списки мельче — отступы пропорционально меньше */
-  nav.tabs>#filters select,nav.tabs>#filters input:not([type=checkbox]){height:34px;min-width:0;max-width:200px;font-size:13px}
+  nav.tabs>#filters select,nav.tabs>#filters input:not([type=checkbox]){height:36px;box-sizing:border-box;min-width:0;max-width:200px;font-size:13px}nav.tabs>#filters select{width:200px}nav.tabs>#filters .seg,nav.tabs>#filters .checks{height:36px;box-sizing:border-box}   /* капсулы одной высоты, списки одной ширины */
   nav.tabs>#filters .grow{flex:0 1 200px}
   nav.tabs>#filters .seg,nav.tabs>#filters .checks{min-height:0;padding:2px}
   nav.tabs>#filters button,nav.tabs>#filters .checks label{font:500 13px var(--body);min-height:30px;padding:0 8px;white-space:nowrap}
@@ -70,9 +70,12 @@ nav.tabs button:focus:not(:focus-visible){outline:none}
 /* вкладки с фильтрами не помещаются в строку — слева вкладки в две строки, справа фильтры столбиком (как «Заявки» v117) */
 @media (min-width:761px){nav.tabs.split2{padding-right:var(--fw,0px);min-height:calc(var(--fh,0px) + 16px);box-sizing:border-box;align-content:center}
   nav.tabs.split2>#filters{position:absolute;right:0;top:50%;transform:translateY(-50%);margin:0;padding:0;max-width:none}
-  nav.tabs.split2>#filters:not(.f2){display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);justify-items:stretch;align-items:center;gap:6px 8px}
+  nav.tabs.split2>#filters:not(.f2){display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);grid-auto-columns:1fr;justify-items:stretch;align-items:center;gap:6px 8px}
   nav.tabs.split2>#filters:not(.f2) .filters{display:contents}
-  nav.tabs.split2>#filters:not(.f2) select{width:200px}   /* списки одной ширины */}
+  nav.tabs.split2>#filters:not(.f2) select{width:200px}   /* списки одной ширины */
+  nav.tabs.split2>#filters.f2{grid-template-columns:repeat(2,minmax(0,1fr));justify-items:stretch}
+  nav.tabs.split2>#filters select,nav.tabs.split2>#filters input:not([type=checkbox]){max-width:none}
+  nav.tabs.split2>#filters select,nav.tabs.split2>#filters input:not([type=checkbox]),nav.tabs.split2>#filters .seg,nav.tabs.split2>#filters .checks{height:36px;box-sizing:border-box}   /* все капсулы одной высоты */}
 @media (max-width:760px){nav.tabs{position:static;grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:repeat(3,1fr);justify-content:stretch}nav.tabs button{border-color:var(--line)}}
 @media (max-width:480px){nav.tabs{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:300px){nav.tabs{grid-template-columns:1fr}}
