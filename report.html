@@ -67,6 +67,12 @@ nav.tabs button:focus:not(:focus-visible){outline:none}
   nav.tabs>#filters.f2>:last-child{grid-column:1/-1;max-width:none}nav.tabs>#filters.f2>:last-child input,nav.tabs>#filters.f2>:last-child select{width:100%;max-width:none}   /* последний фильтр (поиск, период) — на обе колонки */
   body.pinned nav.tabs>button{padding:6px 8px;font-size:12.5px;min-height:36px}}
 @media (min-width:761px){nav.tabs.split>.pinned-f,nav.tabs.split>#filters,nav.tabs.split>.nav-f{flex-basis:100%;margin-left:0;justify-content:flex-end}   /* вкладки в несколько строк — фильтры своей строкой */}
+/* вкладки с фильтрами не помещаются в строку — слева вкладки в две строки, справа фильтры столбиком (как «Заявки» v117) */
+@media (min-width:761px){nav.tabs.split2{padding-right:var(--fw,0px);min-height:calc(var(--fh,0px) + 16px);box-sizing:border-box;align-content:center}
+  nav.tabs.split2>#filters{position:absolute;right:0;top:50%;transform:translateY(-50%);margin:0;padding:0;max-width:none}
+  nav.tabs.split2>#filters:not(.f2){display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);justify-items:stretch;align-items:center;gap:6px 8px}
+  nav.tabs.split2>#filters:not(.f2) .filters{display:contents}
+  nav.tabs.split2>#filters:not(.f2) select{width:200px}   /* списки одной ширины */}
 @media (max-width:760px){nav.tabs{position:static;grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:repeat(3,1fr);justify-content:stretch}nav.tabs button{border-color:var(--line)}}
 @media (max-width:480px){nav.tabs{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:300px){nav.tabs{grid-template-columns:1fr}}
@@ -110,6 +116,7 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
 .kpi .lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .kpi .val{font:600 34px/1.1 var(--display);color:var(--navy);margin:8px 0 6px;letter-spacing:-.02em}
 .kpi .val small{font:500 14px var(--body);color:var(--muted);margin-left:4px;letter-spacing:0}
+.kpi .val{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px}.kpi .val small{margin-left:0;min-width:0}   /* сравнение не влезает рядом с числом — под него, а не за карточку (как «Заявки» v118) */
 .kpi .foot{display:flex;flex-wrap:wrap;gap:6px;align-items:center;color:var(--ink2);font-size:12.5px}
 .kpi .foot+.foot{margin-top:4px}.kpi .val small .delta{font-size:14px;white-space:nowrap}
 .delta{font-weight:600}.delta.up{color:var(--good)}.delta.dn{color:var(--bad)}.delta.eq{color:var(--muted)}
@@ -1232,7 +1239,13 @@ function pinFilters(){const f=document.getElementById('filters'),n=document.getE
   else if(!on&&sp)unpinFilters()}
 addEventListener('scroll',pinFilters,{passive:true});addEventListener('resize',()=>{unpinFilters();delete document.getElementById('filters').dataset.nopin;pinFilters()});
 /** Вкладки не помещаются в одну строку — фильтры в прилипшей строке встают отдельной строкой под ними (не вперемешку с вкладками). */
-function navSplit(n){const b=n.querySelectorAll(':scope>button');if(!b.length)return;const t0=b[0].offsetTop;n.classList.toggle('split',[...b].some(x=>x.offsetTop!==t0))}
+function navSplit(n){const b=n.querySelectorAll(':scope>button');if(!b.length)return;n.classList.remove('split','split2');
+  const t0=b[0].offsetTop,o=[...n.children].find(x=>x.tagName!=='BUTTON'&&x.getClientRects().length);   // перенос — вкладки в несколько строк или фильтры ушли под вкладки
+  if(innerWidth<=760||![...b].some(x=>x.offsetTop!==t0)&&!(o&&o.offsetTop>=t0+b[0].offsetHeight))return;
+  // сначала — вкладки в две строки слева, фильтры справа столбиком; вкладкам мало двух строк — фильтры своей строкой
+  if(o){n.classList.add('split2');const r=o.getBoundingClientRect();n.style.setProperty('--fw',Math.ceil(r.width)+16+'px');n.style.setProperty('--fh',Math.ceil(r.height)+'px');
+    if(new Set([...b].map(x=>x.offsetTop)).size<=2)return;n.classList.remove('split2')}
+  n.classList.add('split')}
 function navHeight(){const n=document.getElementById('tabs');if(!n)return;navSplit(n);document.documentElement.style.setProperty('--nav-h',n.getBoundingClientRect().height+'px')}
 addEventListener('resize',navHeight);
 // Широкая таблица, которой не хватает места (узкий экран, масштаб 110–130%), прокручивается внутри карточки, а не вылезает за неё.
