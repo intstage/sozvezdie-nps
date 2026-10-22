@@ -50,6 +50,18 @@ nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:v
 nav.tabs button{font:600 13.5px var(--display);min-height:40px;color:var(--ink2);background:none;border:1px solid transparent;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;text-align:center}
 nav.tabs button[aria-selected="true"]{background:var(--navy);color:#FFFFFF}
 nav.tabs button:focus:not(:focus-visible){outline:none}
+/* Фильтры при прокрутке — в строке вкладок (компьютер; как в «Продукте» v26): блок #filters переезжает в прилипшую строку */
+@media (min-width:761px){nav.tabs{display:flex;flex-wrap:wrap;align-items:center}
+  nav.tabs>#filters{margin:0 0 0 auto;padding:0;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:6px 8px}
+  nav.tabs>#filters .filters{margin:0;gap:6px 8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+  nav.tabs>#filters .flbl,nav.tabs>#filters #period-note{display:none}
+  nav.tabs>#filters>label,nav.tabs>#filters .filters>label,nav.tabs>#filters .fgroup{font-size:0;gap:0;min-width:0}
+  nav.tabs>#filters>label>*,nav.tabs>#filters .filters>label>*,nav.tabs>#filters .fgroup>*{font-size:13px}
+  nav.tabs>#filters select,nav.tabs>#filters input:not([type=checkbox]){height:34px;min-width:0;max-width:200px;font-size:13px}
+  nav.tabs>#filters .grow{flex:0 1 200px}
+  nav.tabs>#filters .seg,nav.tabs>#filters .checks{min-height:0;padding:2px}
+  nav.tabs>#filters button,nav.tabs>#filters .checks label{font:500 13px var(--body);min-height:30px;padding:0 8px;white-space:nowrap}
+  body.pinned nav.tabs>button{padding:6px 8px;font-size:12.5px;min-height:36px}}
 @media (max-width:760px){nav.tabs{position:static;grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:repeat(3,1fr);justify-content:stretch}nav.tabs button{border-color:var(--line)}}
 @media (max-width:480px){nav.tabs{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:300px){nav.tabs{grid-template-columns:1fr}}
@@ -215,7 +227,8 @@ svg .grid-l{stroke:var(--line);stroke-width:1}
 .tip b{font-weight:600}
 .trip-head{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline}
 .trip-head h2{font:600 17px/1.3 var(--display);color:var(--navy);margin:0}
-.quotes{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.quotes{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr))}
+.quote{min-width:0;overflow-wrap:anywhere}
 .quote{background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:13px}
 .quote .who{color:var(--muted);font-size:11.5px;margin-top:6px}
 .metric-row{display:grid;grid-template-columns:minmax(120px,1.2fr) 2.2fr 44px 64px;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
@@ -511,7 +524,7 @@ function render(){
   if(!trips.length)return;SEEN[S.tab]=1;RTAB=S.tab;const v=$('#view');
   if(intro&&MOTION){v.classList.add('intro');v.querySelectorAll('.panel').forEach((el,k)=>el.style.setProperty('--k',Math.min(k,6)));
     clearTimeout(render.t);render.t=setTimeout(()=>v.classList.remove('intro'),2000)}
-  kpiTween(intro?null:same?prev:{},intro);
+  kpiTween(intro?null:same?prev:{},intro);pinFilters();
 }
 function fitCharts(){let ch=false;
   document.querySelectorAll('#view svg[role="img"][id]').forEach(s=>{const p=s.parentElement,cs=getComputedStyle(p);
@@ -537,6 +550,7 @@ function kpiTween(prev,intro){
   requestAnimationFrame(step)}
 let rzT=0,rzW=innerWidth;addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(trips.length&&Math.abs(innerWidth-rzW)>30){rzW=innerWidth;render()}},250)});
 function renderTab(){
+  unpinFilters();delete document.getElementById('filters').dataset.nopin;   // строка вкладок перерисовывается — фильтры сначала возвращаются на место
   $('#tabs').innerHTML=TABS.map(([k,l])=>`<button role="tab" aria-selected="${S.tab===k}" data-tab="${k}">${l}</button>`).join('');
   $('#tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(b&&e.detail)b.blur();if(b&&trips.length)go(b.dataset.tab)};
   hideTip();
@@ -1193,6 +1207,19 @@ function fitHeader(){
 addEventListener('resize',fitHeader);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitHeader);
 /** Высота прилипшей строки вкладок — к ней прилипают заголовки таблиц. */
+/** Фильтры ушли под прилипшую строку вкладок — переносим сам блок #filters в эту строку (обработчики остаются),
+ *  на его месте — пустое место той же высоты, чтобы страница не прыгала. Телефон: строка вкладок не прилипает — не переносим. */
+function unpinFilters(){const f=document.getElementById('filters'),sp=document.getElementById('filters-sp');
+  if(f&&sp){sp.replaceWith(f);document.body.classList.remove('pinned');navHeight()}}
+function pinFilters(){const f=document.getElementById('filters'),n=document.getElementById('tabs');if(!f||!n)return;
+  const sp=document.getElementById('filters-sp'),at=(sp||f).getBoundingClientRect();
+  const on=innerWidth>760&&!f.dataset.nopin&&!!f.innerHTML.trim()&&at.bottom<n.getBoundingClientRect().bottom;
+  if(on&&!sp){const s=document.createElement('div'),cs=getComputedStyle(f),h0=n.getBoundingClientRect().height;s.id='filters-sp';
+    s.style.height=(f.offsetHeight+parseFloat(cs.marginTop)+parseFloat(cs.marginBottom))+'px';
+    f.replaceWith(s);n.appendChild(f);document.body.classList.add('pinned');navHeight();
+    if(n.getBoundingClientRect().height>h0*2.2){unpinFilters();f.dataset.nopin='1'}}   // фильтры заняли бы больше двух строк (флажки, поиск) — остаются на месте
+  else if(!on&&sp)unpinFilters()}
+addEventListener('scroll',pinFilters,{passive:true});addEventListener('resize',()=>{unpinFilters();delete document.getElementById('filters').dataset.nopin;pinFilters()});
 function navHeight(){const n=document.getElementById('tabs');if(n)document.documentElement.style.setProperty('--nav-h',n.getBoundingClientRect().height+'px')}
 addEventListener('resize',navHeight);
 // Широкая таблица, которой не хватает места (узкий экран, масштаб 110–130%), прокручивается внутри карточки, а не вылезает за неё.
