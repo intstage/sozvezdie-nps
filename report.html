@@ -61,6 +61,9 @@ nav.tabs button:focus:not(:focus-visible){outline:none}
   nav.tabs>#filters .grow{flex:0 1 200px}
   nav.tabs>#filters .seg,nav.tabs>#filters .checks{min-height:0;padding:2px}
   nav.tabs>#filters button,nav.tabs>#filters .checks label{font:500 13px var(--body);min-height:30px;padding:0 8px;white-space:nowrap}
+  nav.tabs>#filters.f2{display:grid;grid-template-columns:auto auto;justify-content:end;gap:6px 8px;margin-block:6px}
+  nav.tabs>#filters .lf{display:none}nav.tabs>#filters .ls{display:inline}
+  nav.tabs>#filters.f2 .grow{grid-column:1/-1;max-width:none}nav.tabs>#filters.f2 .grow input{width:100%;max-width:none}
   body.pinned nav.tabs>button{padding:6px 8px;font-size:12.5px;min-height:36px}}
 @media (max-width:760px){nav.tabs{position:static;grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:repeat(3,1fr);justify-content:stretch}nav.tabs button{border-color:var(--line)}}
 @media (max-width:480px){nav.tabs{grid-template-columns:repeat(2,1fr)}}
@@ -227,6 +230,7 @@ svg .grid-l{stroke:var(--line);stroke-width:1}
 .tip b{font-weight:600}
 .trip-head{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline}
 .trip-head h2{font:600 17px/1.3 var(--display);color:var(--navy);margin:0}
+.ls{display:none}
 .quotes{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr))}
 .quote{min-width:0;overflow-wrap:anywhere}
 .quote{background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:13px}
@@ -550,7 +554,7 @@ function kpiTween(prev,intro){
   requestAnimationFrame(step)}
 let rzT=0,rzW=innerWidth;addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(trips.length&&Math.abs(innerWidth-rzW)>30){rzW=innerWidth;render()}},250)});
 function renderTab(){
-  unpinFilters();delete document.getElementById('filters').dataset.nopin;   // строка вкладок перерисовывается — фильтры сначала возвращаются на место
+  unpinFilters();delete document.getElementById('filters').dataset.nopin;document.getElementById('filters').classList.remove('f2');   // строка вкладок перерисовывается — фильтры сначала возвращаются на место
   $('#tabs').innerHTML=TABS.map(([k,l])=>`<button role="tab" aria-selected="${S.tab===k}" data-tab="${k}">${l}</button>`).join('');
   $('#tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(b&&e.detail)b.blur();if(b&&trips.length)go(b.dataset.tab)};
   hideTip();
@@ -1126,7 +1130,7 @@ function critTable(list){
 
 /* Клиенты → «Скачать список»: CSV для Excel («;», UTF-8 с BOM) со всеми клиентами по текущим фильтрам.
    В Telegram файл присылает бот в чат (из Mini App браузерное скачивание не работает); вне Telegram — обычное скачивание. */
-const CTYPES=['Частное лицо','Агентство','ИП'];
+const CTYPES=['Частное лицо','Агентство','ИП'],CT_SHORT={'Частное лицо':'Частн.','Агентство':'Агент.','ИП':'ИП'};   // короткие — в прилипшей строке вкладок
 function clientsCsv(L){
   const cell=v=>{let s=String(v??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return/[";\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};   // «'» — чтобы Excel не принял текст за формулу
   const head=['Клиент','Тип','Заявка','ID_FB','Теплоход','Рейс','Маршрут','Бывал раньше','Рекомендация','Низкие оценки (0–6)','Каюта','Официант','Комментарий'];
@@ -1156,9 +1160,10 @@ function vClients(){
   const npsOf=L=>{const n=L.length;if(!n)return{nps:null,n:0,P:0,N:0,D:0};const P=L.filter(r=>r[3][0]>=9).length,D=L.filter(r=>r[3][0]<=6).length;return{P,D,N:n-P-D,n,nps:Math.round((P-D)/n*100)}};
   const seg=[['Частные лица',R.filter(r=>r[7]==='Частное лицо')],['Агентства',R.filter(r=>r[7]==='Агентство')],['ИП',R.filter(r=>r[7]==='ИП')],['Бывали раньше (по анкете)',R.filter(r=>r[2]==='Да')],['Первый круиз',R.filter(r=>r[2]==='Нет')],['Без привязки к заявке',R.filter(r=>!r[8])]].map(([l,L])=>({l,...npsOf(L)}));
   if(!Array.isArray(S.ct))S.ct=CTYPES.slice();
-  $('#filters').innerHTML=`<div class="fgroup"><span class="flbl">Оценка</span><div class="seg" role="group" aria-label="Кого показать"><button data-cf="crit" aria-pressed="${S.cf==='crit'}">Критики 0–6</button><button data-cf="neu" aria-pressed="${S.cf==='neu'}">Нейтральные 7–8</button><button data-cf="pro" aria-pressed="${S.cf==='pro'}">Сторонники 9–10</button><button data-cf="all" aria-pressed="${S.cf==='all'}">Все</button></div></div>
-   <div class="fgroup"><span class="flbl">Тип клиента</span><div class="checks" role="group" aria-label="Тип клиента">${CTYPES.map(c=>`<label><input type="checkbox" data-ct="${esc(c)}"${S.ct.includes(c)?' checked':''}>${esc(c)}</label>`).join('')}</div></div>
+  $('#filters').innerHTML=`<div class="fgroup"><span class="flbl">Оценка</span><div class="seg" role="group" aria-label="Кого показать"><button data-cf="crit" aria-pressed="${S.cf==='crit'}"><span class="lf">Критики 0–6</span><span class="ls">0–6</span></button><button data-cf="neu" aria-pressed="${S.cf==='neu'}"><span class="lf">Нейтральные 7–8</span><span class="ls">7–8</span></button><button data-cf="pro" aria-pressed="${S.cf==='pro'}"><span class="lf">Сторонники 9–10</span><span class="ls">9–10</span></button><button data-cf="all" aria-pressed="${S.cf==='all'}">Все</button></div></div>
+   <div class="fgroup"><span class="flbl">Тип клиента</span><div class="checks" role="group" aria-label="Тип клиента">${CTYPES.map(c=>`<label title="${esc(c)}"><input type="checkbox" data-ct="${esc(c)}"${S.ct.includes(c)?' checked':''}><span class="lf">${esc(c)}</span><span class="ls">${esc(CT_SHORT[c]||c)}</span></label>`).join('')}</div></div>
    <label for="f-q" class="grow">Поиск<input type="search" id="f-q" placeholder="ФИО, заявка, теплоход" value="${esc(S.q)}"></label>`;
+  $('#filters').classList.add('f2');   // в прилипшей строке — две строки: оценка и тип клиента, под ними поиск
   $('#filters').onclick=e=>{const b=e.target.closest('[data-cf]');if(b){S.cf=b.dataset.cf;save();render()}};
   $('#filters').onchange=e=>{if(!e.target.dataset.ct)return;S.ct=[...$('#filters').querySelectorAll('[data-ct]:checked')].map(x=>x.dataset.ct);save();drawList()};
   const f={crit:r=>r[3][0]<=6,neu:r=>r[3][0]>=7&&r[3][0]<=8,pro:r=>r[3][0]>=9,all:()=>true}[S.cf];
@@ -1217,7 +1222,7 @@ function pinFilters(){const f=document.getElementById('filters'),n=document.getE
   if(on&&!sp){const s=document.createElement('div'),cs=getComputedStyle(f),h0=n.getBoundingClientRect().height;s.id='filters-sp';
     s.style.height=(f.offsetHeight+parseFloat(cs.marginTop)+parseFloat(cs.marginBottom))+'px';
     f.replaceWith(s);n.appendChild(f);document.body.classList.add('pinned');navHeight();
-    if(n.getBoundingClientRect().height>h0*2.2){unpinFilters();f.dataset.nopin='1'}}   // фильтры заняли бы больше двух строк (флажки, поиск) — остаются на месте
+    if(!f.classList.contains('f2')&&n.getBoundingClientRect().height>h0*2.2){unpinFilters();f.dataset.nopin='1'}}   // «Клиенты» (f2) — две строки фильтров по просьбе, без порога   // фильтры заняли бы больше двух строк (флажки, поиск) — остаются на месте
   else if(!on&&sp)unpinFilters()}
 addEventListener('scroll',pinFilters,{passive:true});addEventListener('resize',()=>{unpinFilters();delete document.getElementById('filters').dataset.nopin;pinFilters()});
 function navHeight(){const n=document.getElementById('tabs');if(n)document.documentElement.style.setProperty('--nav-h',n.getBoundingClientRect().height+'px')}
