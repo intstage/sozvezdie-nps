@@ -52,11 +52,12 @@ nav.tabs button[aria-selected="true"]{background:var(--navy);color:#FFFFFF}
 nav.tabs button:focus:not(:focus-visible){outline:none}
 /* Фильтры при прокрутке — в строке вкладок (компьютер; как в «Продукте» v26): блок #filters переезжает в прилипшую строку */
 @media (min-width:761px){nav.tabs{display:flex;flex-wrap:wrap;align-items:center}
-  nav.tabs>#filters{margin:0 0 0 auto;padding:0;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:6px 8px}
+  nav.tabs>#filters{margin:0 0 0 auto;padding:0 0 0 20px;max-width:100%;box-sizing:border-box;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:6px 8px}
   nav.tabs>#filters .filters{margin:0;gap:6px 8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
   nav.tabs>#filters .flbl,nav.tabs>#filters #period-note{display:none}
   nav.tabs>#filters>label,nav.tabs>#filters .filters>label,nav.tabs>#filters .fgroup{font-size:0;gap:0;min-width:0}
   nav.tabs>#filters>label>*,nav.tabs>#filters .filters>label>*,nav.tabs>#filters .fgroup>*{font-size:13px}
+  nav.tabs>#filters select{padding:0 28px 0 10px;background-position:right 9px center;box-sizing:border-box}   /* в прилипшей строке списки мельче — отступы пропорционально меньше */
   nav.tabs>#filters select,nav.tabs>#filters input:not([type=checkbox]){height:34px;min-width:0;max-width:200px;font-size:13px}
   nav.tabs>#filters .grow{flex:0 1 200px}
   nav.tabs>#filters .seg,nav.tabs>#filters .checks{min-height:0;padding:2px}
@@ -79,6 +80,8 @@ select:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 
 :root{--ctl-h:42px}
 select,input[type=search]{font:15px var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;height:var(--ctl-h);padding:0 12px;min-width:0;max-width:100%}
 .filters select{min-width:220px}
+/* стрелка списка — своя, с отступом справа как у текста слева (системная прижата к краю) */
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%237A8699' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:12px 8px;padding-right:36px;text-overflow:ellipsis}
 .seg,.checks{display:inline-flex;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;min-height:var(--ctl-h)}
 .seg button{font:500 14px var(--body);border:0;background:none;color:var(--ink2);padding:0 14px;border-radius:7px;cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
@@ -367,6 +370,7 @@ details.dq li.warn::before{background:var(--warn)}details.dq li.bad::before{back
   .filters{gap:8px 10px;margin-bottom:12px}
   .filters>label,.flbl{font-size:10px}
   select,input[type=search]{font-size:14px;border-radius:8px;padding:0 8px}
+  select{padding-right:28px;background-position:right 8px center}
   .seg,.checks{border-radius:8px;padding:2px}.seg button{font-size:12.5px;padding:6px 4px;border-radius:6px}
   .checks label{font-size:13px;padding:6px 8px}
 }
