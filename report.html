@@ -64,7 +64,7 @@ nav.tabs button:focus:not(:focus-visible){outline:none}
   nav.tabs>#filters button,nav.tabs>#filters .checks label{font:500 13px var(--body);min-height:30px;padding:0 8px;white-space:nowrap}
   nav.tabs>#filters.f2{display:grid;grid-template-columns:auto auto;justify-content:end;gap:6px 8px;margin-block:6px}
   nav.tabs>#filters .lf{display:none}nav.tabs>#filters .ls{display:inline}
-  nav.tabs>#filters.f2 .grow{grid-column:1/-1;max-width:none}nav.tabs>#filters.f2 .grow input{width:100%;max-width:none}
+  nav.tabs>#filters.f2>:last-child{grid-column:1/-1;max-width:none}nav.tabs>#filters.f2>:last-child input,nav.tabs>#filters.f2>:last-child select{width:100%;max-width:none}   /* последний фильтр (поиск, период) — на обе колонки */
   body.pinned nav.tabs>button{padding:6px 8px;font-size:12.5px;min-height:36px}}
 @media (max-width:760px){nav.tabs{position:static;grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:repeat(3,1fr);justify-content:stretch}nav.tabs button{border-color:var(--line)}}
 @media (max-width:480px){nav.tabs{grid-template-columns:repeat(2,1fr)}}
@@ -736,6 +736,7 @@ function vPub(){
   $('#filters').innerHTML=`<label>Площадка<select id="f-pp">${opt('','Все площадки',S.pp)}${plats.map(p=>opt(p,p,S.pp)).join('')}</select></label>
    <label>Теплоход<select id="f-ps">${opt('','Все теплоходы',S.ps)}${shipList.map(p=>opt(p,p,S.ps)).join('')}</select></label>
    ${RP.html}`;
+  $('#filters').classList.add('f2');   // в прилипшей строке — две строки: площадка и теплоход, под ними период
   $('#filters').onchange=e=>{const k={'f-pp':'pp','f-ps':'ps','f-cm':'cm'}[e.target.id];if(k){S[k]=e.target.value;save();render()}};
   const L=ALL.filter(r=>(!S.pp||r[0]===S.pp)&&(!S.ps||r[5].split(',').map(x=>x.trim()).includes(S.ps))&&RP.inP(r[1]));
   const A=pubAgg(L);
