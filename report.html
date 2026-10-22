@@ -66,6 +66,7 @@ nav.tabs button:focus:not(:focus-visible){outline:none}
   nav.tabs>#filters .lf{display:none}nav.tabs>#filters .ls{display:inline}
   nav.tabs>#filters.f2>:last-child{grid-column:1/-1;max-width:none}nav.tabs>#filters.f2>:last-child input,nav.tabs>#filters.f2>:last-child select{width:100%;max-width:none}   /* последний фильтр (поиск, период) — на обе колонки */
   body.pinned nav.tabs>button{padding:6px 8px;font-size:12.5px;min-height:36px}}
+@media (min-width:761px){nav.tabs.split>.pinned-f,nav.tabs.split>#filters,nav.tabs.split>.nav-f{flex-basis:100%;margin-left:0;justify-content:flex-end}   /* вкладки в несколько строк — фильтры своей строкой */}
 @media (max-width:760px){nav.tabs{position:static;grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:repeat(3,1fr);justify-content:stretch}nav.tabs button{border-color:var(--line)}}
 @media (max-width:480px){nav.tabs{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:300px){nav.tabs{grid-template-columns:1fr}}
@@ -1230,7 +1231,9 @@ function pinFilters(){const f=document.getElementById('filters'),n=document.getE
     if(!f.classList.contains('f2')&&n.getBoundingClientRect().height>h0*2.2){unpinFilters();f.dataset.nopin='1'}}   // «Клиенты» (f2) — две строки фильтров по просьбе, без порога   // фильтры заняли бы больше двух строк (флажки, поиск) — остаются на месте
   else if(!on&&sp)unpinFilters()}
 addEventListener('scroll',pinFilters,{passive:true});addEventListener('resize',()=>{unpinFilters();delete document.getElementById('filters').dataset.nopin;pinFilters()});
-function navHeight(){const n=document.getElementById('tabs');if(n)document.documentElement.style.setProperty('--nav-h',n.getBoundingClientRect().height+'px')}
+/** Вкладки не помещаются в одну строку — фильтры в прилипшей строке встают отдельной строкой под ними (не вперемешку с вкладками). */
+function navSplit(n){const b=n.querySelectorAll(':scope>button');if(!b.length)return;const t0=b[0].offsetTop;n.classList.toggle('split',[...b].some(x=>x.offsetTop!==t0))}
+function navHeight(){const n=document.getElementById('tabs');if(!n)return;navSplit(n);document.documentElement.style.setProperty('--nav-h',n.getBoundingClientRect().height+'px')}
 addEventListener('resize',navHeight);
 // Широкая таблица, которой не хватает места (узкий экран, масштаб 110–130%), прокручивается внутри карточки, а не вылезает за неё.
 // Таблицы, что помещаются, остаются без своей прокрутки — их шапка прилипает к верху страницы.
