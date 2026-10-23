@@ -62,20 +62,23 @@ nav.tabs button:focus:not(:focus-visible){outline:none}
   nav.tabs>#filters .grow{flex:0 1 200px}
   nav.tabs>#filters .seg,nav.tabs>#filters .checks{min-height:0;padding:2px}
   nav.tabs>#filters button,nav.tabs>#filters .checks label{font:500 13px var(--body);min-height:30px;padding:0 8px;white-space:nowrap}
-  nav.tabs>#filters.f2{display:grid;grid-template-columns:auto auto;justify-content:end;gap:6px 8px;margin-block:6px}
+  nav.tabs>#filters.f2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));justify-content:end;gap:6px 8px;margin-block:6px}
+  nav.tabs>#filters.f2 .seg,nav.tabs>#filters.f2 .checks{display:flex;width:100%}nav.tabs>#filters.f2 .seg>button,nav.tabs>#filters.f2 .checks>label{flex:1 1 0;justify-content:center;text-align:center}   /* «Клиенты»: оценка и флажки — две равные колонки */
   nav.tabs>#filters .lf{display:none}nav.tabs>#filters .ls{display:inline}
   nav.tabs>#filters.f2>:last-child{grid-column:1/-1;max-width:none}nav.tabs>#filters.f2>:last-child input,nav.tabs>#filters.f2>:last-child select{width:100%;max-width:none}   /* последний фильтр (поиск, период) — на обе колонки */
   body.pinned nav.tabs>button{padding:6px 8px;font-size:12.5px;min-height:36px}}
 @media (min-width:761px){nav.tabs.split>.pinned-f,nav.tabs.split>#filters,nav.tabs.split>.nav-f{flex-basis:100%;margin-left:0;justify-content:flex-end}   /* вкладки в несколько строк — фильтры своей строкой */}
-/* вкладки с фильтрами не помещаются в строку — слева вкладки в две строки, справа фильтры столбиком (как «Заявки» v117) */
-@media (min-width:761px){nav.tabs.split2{padding-right:var(--fw,0px);min-height:calc(var(--fh,0px) + 16px);box-sizing:border-box;align-content:center}
-  nav.tabs.split2>#filters{position:absolute;right:0;top:50%;transform:translateY(-50%);margin:0;padding:0;max-width:none}
-  nav.tabs.split2>#filters:not(.f2){display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);grid-auto-columns:1fr;justify-items:stretch;align-items:center;gap:6px 8px}
-  nav.tabs.split2>#filters:not(.f2) .filters{display:contents}
-  nav.tabs.split2>#filters:not(.f2) select{width:200px}   /* списки одной ширины */
-  nav.tabs.split2>#filters.f2{grid-template-columns:repeat(2,minmax(0,1fr));justify-items:stretch}
-  nav.tabs.split2>#filters select,nav.tabs.split2>#filters input:not([type=checkbox]){max-width:none}
-  nav.tabs.split2>#filters select,nav.tabs.split2>#filters input:not([type=checkbox]),nav.tabs.split2>#filters .seg,nav.tabs.split2>#filters .checks{height:36px;box-sizing:border-box}   /* все капсулы одной высоты */}
+/* вкладки с фильтрами не помещаются в одну строку — пополам (23.10.2026): слева вкладки (переносятся, до двух строк),
+   справа фильтры на половину ширины (тоже до двух строк), капсулы делят её поровну; вкладкам мало двух строк — .split */
+@media (min-width:761px){nav.tabs.split2{padding-right:50%;min-height:calc(var(--fh,0px) + 16px);box-sizing:border-box;align-content:center}
+  nav.tabs.split2>#filters{position:absolute;right:0;top:50%;transform:translateY(-50%);width:calc(50% - 16px);max-width:none;margin:0;padding:0;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:6px 8px}
+  nav.tabs:is(.split,.split2)>#filters[id]{display:flex}   /* и у «Клиентов» (.f2) — те же поровну */
+  nav.tabs:is(.split,.split2)>#filters[id] .filters{display:contents}
+  nav.tabs:is(.split,.split2)>#filters[id] .filters>*,nav.tabs:is(.split,.split2)>#filters[id]>:not(.filters){flex:1 1 calc(50% - 4px);min-width:0}
+  nav.tabs:is(.split,.split2)>#filters[id] select,nav.tabs:is(.split,.split2)>#filters[id] input:not([type=checkbox]){width:100%;max-width:none}
+  nav.tabs:is(.split,.split2)>#filters[id] .seg,nav.tabs:is(.split,.split2)>#filters[id] .checks{display:flex;width:100%}
+  nav.tabs:is(.split,.split2)>#filters[id] .seg>button,nav.tabs:is(.split,.split2)>#filters[id] .checks>label{flex:1 1 0;justify-content:center;text-align:center}
+  nav.tabs.split>#filters{flex-basis:auto;width:max(50%,420px);max-width:100%;margin-left:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:6px 8px}   /* запасной вариант: фильтры своей строкой, справа на половину */}
 @media (max-width:760px){nav.tabs{position:static;grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:repeat(3,1fr);justify-content:stretch}nav.tabs button{border-color:var(--line)}}
 @media (max-width:480px){nav.tabs{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:300px){nav.tabs{grid-template-columns:1fr}}
@@ -1244,11 +1247,13 @@ function pinFilters(){const f=document.getElementById('filters'),n=document.getE
 addEventListener('scroll',pinFilters,{passive:true});addEventListener('resize',()=>{unpinFilters();delete document.getElementById('filters').dataset.nopin;pinFilters()});
 /** Вкладки не помещаются в одну строку — фильтры в прилипшей строке встают отдельной строкой под ними (не вперемешку с вкладками). */
 function navSplit(n){const b=n.querySelectorAll(':scope>button');if(!b.length)return;n.classList.remove('split','split2');
-  const t0=b[0].offsetTop,o=[...n.children].find(x=>x.tagName!=='BUTTON'&&x.getClientRects().length);   // перенос — вкладки в несколько строк или фильтры ушли под вкладки
-  if(innerWidth<=760||![...b].some(x=>x.offsetTop!==t0)&&!(o&&o.offsetTop>=t0+b[0].offsetHeight))return;
-  // сначала — вкладки в две строки слева, фильтры справа столбиком; вкладкам мало двух строк — фильтры своей строкой
-  if(o){n.classList.add('split2');const r=o.getBoundingClientRect();n.style.setProperty('--fw',Math.ceil(r.width)+16+'px');n.style.setProperty('--fh',Math.ceil(r.height)+'px');
-    if(new Set([...b].map(x=>x.offsetTop)).size<=2)return;n.classList.remove('split2')}
+  const t0=b[0].offsetTop,o=[...n.children].find(x=>x.tagName!=='BUTTON'&&x.getClientRects().length);
+  // не помещается в одну строку: вкладки переносятся, фильтры ушли под вкладки или подпись в фильтре обрезана многоточием
+  const cut=o&&[...o.querySelectorAll('*')].some(e=>e.scrollWidth>e.clientWidth+1&&getComputedStyle(e).textOverflow==='ellipsis');
+  if(innerWidth<=760||![...b].some(x=>x.offsetTop!==t0)&&!(o&&(o.offsetTop>=t0+b[0].offsetHeight||cut)))return;
+  // пополам: слева вкладки (до двух строк), справа фильтры на половину ширины (до двух строк); не влезло — фильтры своей строкой
+  if(o){n.classList.add('split2');const h=Math.ceil(o.getBoundingClientRect().height);n.style.setProperty('--fh',h+'px');
+    if(new Set([...b].map(x=>x.offsetTop)).size<=2&&h<=90)return;n.classList.remove('split2')}
   n.classList.add('split')}
 function navHeight(){const n=document.getElementById('tabs');if(!n)return;navSplit(n);document.documentElement.style.setProperty('--nav-h',n.getBoundingClientRect().height+'px')}
 addEventListener('resize',navHeight);
