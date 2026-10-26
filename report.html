@@ -382,6 +382,7 @@ details.dq li.warn::before{background:var(--warn)}details.dq li.bad::before{back
 .fab{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:15;display:flex;flex-direction:column;gap:10px}
 .fab button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--accent);box-shadow:0 4px 14px rgba(16,58,96,.18);display:grid;place-items:center;cursor:pointer;padding:0}
 .fab svg{width:20px;height:20px}
+body.busy #btn-ref svg{animation:sp 1s linear infinite}   /* пока обновляется — значок крутится */
 @media print{.fab{display:none}}
 /* подсветка при наведении — только у устройств с мышью */
 @media (hover:hover){nav.tabs button:hover,.checks label:hover,tr.click:hover td{background:var(--surface2)}.btn:hover,.btn.icon-btn:hover,.fab button:hover{background:var(--accent-soft)}}
@@ -435,7 +436,7 @@ window.addEventListener('load',function(){setTimeout(function(){
 </script>
   <footer class="note" id="footnote"></footer>
 </div>
-<div class="fab"><button type="button" id="btn-back" title="Назад — к предыдущей вкладке" aria-label="Назад" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" id="btn-top" title="Наверх" aria-label="Наверх" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+<div class="fab"><button type="button" id="btn-back" title="Назад — к предыдущей вкладке" aria-label="Назад" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6.5v11L7.5 12z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button><button type="button" id="btn-top" title="Наверх" aria-label="Наверх" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 14.5h11L12 7.5z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button><button type="button" id="btn-ref" title="Обновить данные" aria-label="Обновить данные"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12a7 7 0 1 1-2.05-4.95" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19.5 4.5v5h-5z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button></div>
 <div class="tip" id="tip" hidden></div>
 
 <script>
@@ -1271,6 +1272,7 @@ var ftR=0;function ftRun(){cancelAnimationFrame(ftR);ftR=requestAnimationFrame(f
 new MutationObserver(ftRun).observe(document.getElementById('view'),{childList:true,subtree:true});addEventListener('resize',ftRun);
 $('#btn-back').onclick=e=>{if(e.detail)e.currentTarget.blur();goBack()};
 $('#btn-top').onclick=e=>{if(e.detail)e.currentTarget.blur();window.scrollTo({top:0,behavior:'smooth'})};
+$('#btn-ref').onclick=e=>{if(e.detail)e.currentTarget.blur();if(!document.body.classList.contains('busy'))load(true)};   // третья плавающая кнопка — то же, что «Обновить данные»
 addEventListener('scroll',()=>{$('#btn-top').hidden=scrollY<400},{passive:true});
 
 render();
