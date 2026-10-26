@@ -99,7 +99,7 @@ select:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 
 select,input[type=search]{font:15px var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;height:var(--ctl-h);padding:0 12px;min-width:0;max-width:100%}
 .filters select{min-width:220px}
 /* стрелка списка — своя, с отступом справа как у текста слева (системная прижата к краю) */
-select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%237A8699' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:12px 8px;padding-right:36px;text-overflow:ellipsis}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M2 1.5h8L6 6.5z' fill='%237A8699' stroke='%237A8699' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:12px 8px;padding-right:36px;text-overflow:ellipsis}
 .seg,.checks{display:inline-flex;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;min-height:var(--ctl-h)}
 .seg button{font:500 14px var(--body);border:0;background:none;color:var(--ink2);padding:0 14px;border-radius:7px;cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
@@ -171,8 +171,8 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
 .tbl-wrap{overflow-x:auto;margin-inline:-4px}
 thead th{position:sticky;z-index:3;background:var(--surface);box-shadow:inset 0 -1px 0 var(--line)}
 .kpi.go{cursor:pointer;transition:border-color .15s,box-shadow .15s}
-.kpi.go .lbl{display:flex;justify-content:space-between;gap:8px}.kpi.go .lbl::after{content:"↓";color:var(--accent);font-size:13px;letter-spacing:0}
-.kpi.go[data-go^="@"] .lbl::after{content:"→"}
+.kpi.go .lbl{display:flex;justify-content:space-between;gap:8px}.kpi.go .lbl::after{content:"";flex:none;align-self:center;width:9px;height:7px;background:var(--accent);clip-path:polygon(0 0,100% 0,50% 100%);border-radius:1px}   /* треугольник ▼ — как у раскрывающихся блоков */
+.kpi.go[data-go^="@"] .lbl::after{content:"";transform:rotate(-90deg)}   /* на другую вкладку — ▶ */
 @media (hover:hover){.kpi.go:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(0,0,0,.07)}}
 .kpi.go:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .panel[id]{scroll-margin-top:calc(var(--nav-h,57px) + 12px)}
@@ -203,7 +203,8 @@ tr.click{cursor:pointer}
 .heat thead th.rowh{padding:0 10px 6px 0}   /* шапка: подписи и кнопки теплоходов — по одной средней линии */
 /* название теплохода — кнопка: открывает отчёт теплохода */
 .heat th a.ship-btn{display:flex;align-items:center;justify-content:center;gap:4px;min-height:44px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--accent);text-decoration:none;font:600 11.5px/1.2 var(--body);letter-spacing:0;text-transform:none;text-align:center}
-.heat th a.ship-btn::after{content:"›";font-size:15px;line-height:1;flex:none}
+.ship-btn::after{content:"";display:inline-block;flex:none;width:6px;height:8px;margin-left:6px;vertical-align:1px;background:currentColor;clip-path:polygon(0 0,100% 50%,0 100%)}   /* треугольник ▶ — как у карточек */
+.heat th a.ship-btn::after{margin-left:0}
 .heat th a.ship-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (hover:hover){.heat th a.ship-btn:hover{background:var(--accent-soft);border-color:var(--accent)}}
 .heat .rowh{position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;min-width:150px;padding:6px 10px 6px 0;font:500 13px var(--body);color:var(--ink);text-transform:none;letter-spacing:0}
@@ -367,8 +368,8 @@ header.top .legend-zones{grid-area:legend}
 .err{background:var(--bad-soft);color:var(--bad);border-radius:10px;padding:14px 16px}
 details.dq summary{cursor:pointer;font-weight:600;font-size:15px;list-style:none;display:flex;align-items:center;gap:10px}
 details.dq summary::-webkit-details-marker{display:none}
-details.dq summary::before{content:"";width:7px;height:7px;border-right:2px solid var(--ink2);border-bottom:2px solid var(--ink2);transform:rotate(-45deg);transition:transform .15s ease;flex:none;margin-left:2px}
-details.dq[open] summary::before{transform:rotate(45deg) translate(-2px,-2px)}
+details.dq summary::before{content:"";width:7px;height:9px;background:var(--ink2);clip-path:polygon(0 0,100% 50%,0 100%);border-radius:1px;transition:transform .15s ease;flex:none;margin-left:2px}   /* треугольник ▸, раскрыто — ▾ */
+details.dq[open] summary::before{transform:rotate(90deg)}
 details.dq summary:focus:not(:focus-visible){outline:none}
 details.dq ul{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:6px}
 details.dq li{display:grid;grid-template-columns:4px 1fr;gap:10px;font-size:13px;padding:6px 10px;background:var(--surface2);border-radius:6px}
@@ -944,7 +945,7 @@ function whyLagging(){
     // обе группы тянут NPS вниз: критики (0–6) вычитаются, нейтральные (7–8) не добавляют; сначала — та, что отличается от флота сильнее
     const pC=`критиков (0–6) ${pc(cr)} — по флоту ${pc(fP)}`,pN=`нейтральных (7–8) ${pc(nu)} — по флоту ${pc(fN)}`;
     const why=(cr-fP>=nu-fN?[pC,pN]:[pN,pC]).join('; ');
-    return`<div class="why-card"><div class="why-head"><button type="button" class="btn ship-btn" data-ship="${esc(r.s)}">${esc(r.s)} ›</button>
+    return`<div class="why-card"><div class="why-head"><button type="button" class="btn ship-btn" data-ship="${esc(r.s)}">${esc(r.s)}</button>
       <span class="why-nps"><b style="color:${ZC[zone(a.nps,a.n)]}">${a.nps}</b> <span class="muted">флот ${F.nps}</span> <span class="delta dn">${heatArrow(r.d)}</span></span></div>
       <p class="why-line"><span class="why-lbl">Почему ниже</span>${why} · ${a.n} анкет</p>
       <p class="why-line"><span class="why-lbl">Где проседает</span>${dn.length?dn.map(g=>`<span class="chip bad">${SHORT[g.k]} ${heatSigned(g.d)}</span>`).join(''):'<span class="muted">по отдельным пунктам на уровне флота</span>'}</p>
