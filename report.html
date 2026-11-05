@@ -198,6 +198,7 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
 tr.click{cursor:pointer}
 /* «Что проседает по теплоходам» */
 .heat{border-collapse:separate;border-spacing:3px;font-size:13px;min-width:720px}
+.heat.heat-few{width:auto;min-width:0}.heat.heat-few td,.heat.heat-few th:not(.rowh){width:140px}   /* 1–3 теплохода в доступе: колонки не растягиваются на всю ширину */
 .heat th{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:center;white-space:normal;line-height:1.2;padding:6px 4px;min-width:72px;border:0;vertical-align:bottom}
 .heat thead th{box-shadow:none;vertical-align:middle;padding:0 0 6px}
 .heat thead th.rowh{padding:0 10px 6px 0}   /* шапка: подписи и кнопки теплоходов — по одной средней линии */
@@ -1007,6 +1008,8 @@ function heatArrow(d){if(d==null)return'нет сравнения';const r=Math.
 function heatSigned(d){if(d==null)return'—';const r=Math.round(d);return r>0?'+'+r:r<0?'−'+Math.abs(r):'0'}
 // оттенок разницы: 5 ступеней — на 10+ ниже, на 3–9 ниже, как флот (±2), на 3–9 выше, на 10+ выше
 function heatBand(d){const r=Math.round(d);return r<=-10?'dn2':r<=-3?'dn1':r>=10?'up2':r>=3?'up1':'eq'}
+// один теплоход в доступе (05.11) — «по теплоходу»
+function heatTitle(){return'Что проседает по '+(ships.length===1?'теплоходу':'теплоходам')}
 function heatmap(){
   const dev=S.heat!=='abs',cols=ships.map(s=>({s,A:agg(trips.filter(t=>t.ship===s))}));
   const leg=dev
@@ -1021,11 +1024,11 @@ function heatmap(){
         const sig=!low&&heatSig(x,f),cls=low?'low':dev?(sig?heatBand(d):'eq'):zone(x.nps,x.n);
         const tip=`<b>${esc(c.s)}</b> · ${SHORT[k]}<br>Индекс ${x.nps??'—'} · ${x.n} отв.<br>Флот ${f.nps??'—'} · разница ${heatSigned(d)}${low?'<br>Мало ответов — выводы делать рано':!sig&&Math.round(d)!==0?'<br>Разница в пределах случайного разброса':''}`;
         return`<td class="hc ${cls}"><button type="button" data-heat-tip data-tip="${tip}" aria-label="${esc(c.s)}, ${SHORT[k]}: индекс ${x.nps??'нет'}, флот ${f.nps??'нет'}, разница ${heatSigned(d)}, ответов ${x.n}">${x.n?(dev?heatSigned(d):x.nps):'—'}</button></td>`}).join('')}</tr>`}});
-  return`<div class="panel heat-panel" id="sum-heat"><div class="ph-head"><div><h2>Что проседает по теплоходам</h2><p class="sub">${dev?'В клетке — на сколько пунктов теплоход выше (+) или ниже (−) флота по этому пункту анкеты':'В клетке — индекс пункта анкеты по формуле NPS'}</p></div>
+  return`<div class="panel heat-panel" id="sum-heat"><div class="ph-head"><div><h2>${heatTitle()}</h2><p class="sub">${dev?'В клетке — на сколько пунктов теплоход выше (+) или ниже (−) флота по этому пункту анкеты':'В клетке — индекс пункта анкеты по формуле NPS'}</p></div>
   <div class="seg" role="group" aria-label="Что показывать"><button data-heat="dev" aria-pressed="${dev}">Разница с флотом</button><button data-heat="abs" aria-pressed="${!dev}">Оценки</button></div></div>
   <div class="heat-leg">${leg}</div>
-  <details class="heat-help"><summary>Как читать</summary><ul><li><b>Флот</b> — общий индекс всех ${DATA.fleetShips||ships.length} теплоходов по пункту. Теплоходы с большим числом ответов влияют на него сильнее.</li><li>Красная клетка только у одного теплохода — по этому пункту он отстаёт от остальных.</li><li>Строка жёлтая или красная у всех теплоходов в режиме «Оценки» — пункт оценивают ниже по всей компании.</li><li>Разница с флотом считается по точным значениям. Поэтому она может отличаться на 1 от разницы округлённых чисел в режиме «Оценки».</li><li>Нажмите на клетку, чтобы увидеть индекс теплохода, индекс флота и число ответов.</li></ul></details>
-  <div class="tbl-wrap tw-x"><table class="heat"><thead><tr><th class="rowh" scope="col">Пункт анкеты</th><th scope="col" class="fleet">Флот</th>${cols.map(c=>`<th scope="col"><a href="#ship" class="ship-btn" data-ship="${esc(c.s)}" title="Открыть отчёт теплохода">${esc(c.s)}</a></th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div></div>`}
+  <details class="heat-help"><summary>Как читать</summary><ul><li><b>Флот</b> — общий индекс всех ${DATA.fleetShips||ships.length} теплоходов по пункту. Теплоходы с большим числом ответов влияют на него сильнее.</li>${ships.length>1?'<li>Красная клетка только у одного теплохода — по этому пункту он отстаёт от остальных.</li>':''}<li>Строка жёлтая или красная у всех теплоходов в режиме «Оценки» — пункт оценивают ниже по всей компании.</li><li>Разница с флотом считается по точным значениям. Поэтому она может отличаться на 1 от разницы округлённых чисел в режиме «Оценки».</li><li>Нажмите на клетку, чтобы увидеть индекс теплохода, индекс флота и число ответов.</li></ul></details>
+  <div class="tbl-wrap tw-x"><table class="heat${cols.length<4?' heat-few':''}"><thead><tr><th class="rowh" scope="col">Пункт анкеты</th><th scope="col" class="fleet">Флот</th>${cols.map(c=>`<th scope="col"><a href="#ship" class="ship-btn" data-ship="${esc(c.s)}" title="Открыть отчёт теплохода">${esc(c.s)}</a></th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div></div>`}
 
 function alerts(){
   const out=[];
@@ -1053,7 +1056,7 @@ function vSummary(){
   const zw=A[0].nps>=85?'сильная зона':A[0].nps>=70?'зона внимания':'проседает';
   const verdict=(DATA.span?`<span class="muted">Анкеты по рейсам ${DATA.span}.</span> `:'')+(own?`NPS ${ships.length===1?'теплохода «'+esc(ships[0])+'»':'ваших теплоходов'} <b>${A[0].nps}</b> по ${A[0].n.toLocaleString('ru-RU')} ответам — ${zw}; флот — ${FLEET[0].nps}. `:`NPS флота <b>${A[0].nps}</b> по ${A[0].n.toLocaleString('ru-RU')} ответам — ${zw}. `)+(lag.length?(ships.length===1?'Заметно ниже флота.':`Заметно ниже флота: ${lag.slice(0,3).map(x=>`<b>${esc(x.s)}</b> (${x.a.nps})`).join(', ')}.`):(ships.length===1?'Заметно от флота не отстаёт.':'Ни один теплоход заметно не отстаёт от флота.'));
   vv.innerHTML=`<div class="grid" style="gap:16px"><p class="verdict" style="margin:0">${verdict}</p>
-   <div class="grid g-kpi">${kgo(kpiNps('NPS «Рекомендуете Созвездие»',A[0],fv(0),fl),'sum-ships','NPS по теплоходам')}${kgo(kpiPnd(A[0]),'sum-why|sum-heat','Почему теплоходы ниже флота')}${kgo(kpiNps('Впечатление от круиза',A[1],fv(1),fl),'sum-heat','Что проседает по теплоходам')}${kgo(kpiPlain('Отзывов (ID_FB)',fbCount(trips),'',`${DATA.rows.length} анкет · ${trips.length} рейсов · ${ships.length} теплоходов`),'@clients','Открыть «Клиенты»')}</div>
+   <div class="grid g-kpi">${kgo(kpiNps('NPS «Рекомендуете Созвездие»',A[0],fv(0),fl),'sum-ships','NPS по теплоходам')}${kgo(kpiPnd(A[0]),'sum-why|sum-heat','Почему теплоходы ниже флота')}${kgo(kpiNps('Впечатление от круиза',A[1],fv(1),fl),'sum-heat',heatTitle())}${kgo(kpiPlain('Отзывов (ID_FB)',fbCount(trips),'',`${DATA.rows.length} анкет · ${trips.length} рейсов · ${ships.length} теплоходов`),'@clients','Открыть «Клиенты»')}</div>
    <div class="grid g-2">${shipBars()}${trendChart(trips,'Динамика NPS по рейсам','Каждая точка — рейс по дате отправления; зелёная полоса — зона 85+, красная — ниже 70')}</div>
    ${whyLagging()}
    <div class="grid g-2">${zoneLists(A,F)}</div>
