@@ -583,7 +583,9 @@ function kpiTween(prev,intro){
 let rzT=0,rzW=innerWidth;addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(trips.length&&Math.abs(innerWidth-rzW)>30){rzW=innerWidth;render()}},250)});
 function renderTab(){
   unpinFilters();delete document.getElementById('filters').dataset.nopin;document.getElementById('filters').classList.remove('f2');   // строка вкладок перерисовывается — фильтры сначала возвращаются на место
-  $('#tabs').innerHTML=TABS.map(([k,l])=>`<button role="tab" aria-selected="${S.tab===k}" data-tab="${k}">${l}</button>`).join('');
+  // доступ к части теплоходов (05.11): несколько — «Теплоходы», один — сравнивать не с чем, остаётся вкладка «Теплоход»
+  const one=DATA.scope&&ships.length===1;if(one&&S.tab==='ships')S.tab='ship';
+  $('#tabs').innerHTML=TABS.filter(([k])=>!(one&&k==='ships')).map(([k,l])=>`<button role="tab" aria-selected="${S.tab===k}" data-tab="${k}">${k==='ships'&&DATA.scope?'Теплоходы':l}</button>`).join('');
   $('#tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(b&&e.detail)b.blur();if(b&&trips.length)go(b.dataset.tab)};
   hideTip();
   if(!trips.length)return;
@@ -1049,7 +1051,7 @@ function vSummary(){
   // вывод одной фразой: уровень флота и кто заметно (не случайно) отстаёт
   const lag=ships.map(s=>({s,a:agg(trips.filter(t=>t.ship===s))[0]})).filter(x=>x.a.n>=MIN_N&&Math.round(heatDiff(x.a,FLEET[0]))<=-3&&heatSig(x.a,FLEET[0])).sort((p,q)=>p.a.nps-q.a.nps);
   const zw=A[0].nps>=85?'сильная зона':A[0].nps>=70?'зона внимания':'проседает';
-  const verdict=(DATA.span?`<span class="muted">Анкеты по рейсам ${DATA.span}.</span> `:'')+(own?`NPS ваших теплоходов <b>${A[0].nps}</b> по ${A[0].n.toLocaleString('ru-RU')} ответам — ${zw}; флот — ${FLEET[0].nps}. `:`NPS флота <b>${A[0].nps}</b> по ${A[0].n.toLocaleString('ru-RU')} ответам — ${zw}. `)+(lag.length?`Заметно ниже флота: ${lag.slice(0,3).map(x=>`<b>${esc(x.s)}</b> (${x.a.nps})`).join(', ')}.`:'Ни один теплоход заметно не отстаёт от флота.');
+  const verdict=(DATA.span?`<span class="muted">Анкеты по рейсам ${DATA.span}.</span> `:'')+(own?`NPS ${ships.length===1?'теплохода «'+esc(ships[0])+'»':'ваших теплоходов'} <b>${A[0].nps}</b> по ${A[0].n.toLocaleString('ru-RU')} ответам — ${zw}; флот — ${FLEET[0].nps}. `:`NPS флота <b>${A[0].nps}</b> по ${A[0].n.toLocaleString('ru-RU')} ответам — ${zw}. `)+(lag.length?(ships.length===1?'Заметно ниже флота.':`Заметно ниже флота: ${lag.slice(0,3).map(x=>`<b>${esc(x.s)}</b> (${x.a.nps})`).join(', ')}.`):(ships.length===1?'Заметно от флота не отстаёт.':'Ни один теплоход заметно не отстаёт от флота.'));
   vv.innerHTML=`<div class="grid" style="gap:16px"><p class="verdict" style="margin:0">${verdict}</p>
    <div class="grid g-kpi">${kgo(kpiNps('NPS «Рекомендуете Созвездие»',A[0],fv(0),fl),'sum-ships','NPS по теплоходам')}${kgo(kpiPnd(A[0]),'sum-why|sum-heat','Почему теплоходы ниже флота')}${kgo(kpiNps('Впечатление от круиза',A[1],fv(1),fl),'sum-heat','Что проседает по теплоходам')}${kgo(kpiPlain('Отзывов (ID_FB)',fbCount(trips),'',`${DATA.rows.length} анкет · ${trips.length} рейсов · ${ships.length} теплоходов`),'@clients','Открыть «Клиенты»')}</div>
    <div class="grid g-2">${shipBars()}${trendChart(trips,'Динамика NPS по рейсам','Каждая точка — рейс по дате отправления; зелёная полоса — зона 85+, красная — ниже 70')}</div>
